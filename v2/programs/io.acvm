@@ -1,0 +1,5 @@
+input 0
+print 0
+set 0 10
+print 0
+hlt

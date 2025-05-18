@@ -1,0 +1,7 @@
+jmp start
+
+set 0 999
+
+lbl start
+print 0
+hlt

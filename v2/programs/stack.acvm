@@ -1,0 +1,16 @@
+set 0 42
+push 0
+set 0 31
+push 0
+set 0 14
+push 0
+
+dump
+
+pop 0
+print 0
+pop 0
+print 0
+pop 0 
+print 0
+hlt 
