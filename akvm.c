@@ -18,6 +18,7 @@ typedef struct {
     uint8_t memory[0x10000];
 } VM;
 
+// initialize CPU, set all registers to zero
 void init_cpu(CPU *cpu) {
     memset(cpu->registers, 0, sizeof(cpu->registers));
     cpu->pc = 0; 
@@ -25,11 +26,13 @@ void init_cpu(CPU *cpu) {
     cpu->flags = 0;
 }
 
+// initialize whole VM, reset CPU and memory
 void init_vm(VM *vm) {
     init_cpu(&vm->cpu);
     memset(vm->memory, 0, sizeof(vm->memory));
 }
 
+// dump VM state to console
 void dump_vm(VM *vm) {
     printf("PC: %X; SP: %X; Flags: %d;\n", vm->cpu.pc, vm->cpu.sp, vm->cpu.flags);
     printf("Registers: ");
@@ -39,6 +42,7 @@ void dump_vm(VM *vm) {
     printf("\n");
 }
 
+// fetch-decode-execute loop
 void run_vm(VM *vm) {
     while (1) {
         uint8_t opcode = vm->memory[vm->cpu.pc++];
@@ -87,6 +91,7 @@ int main() {
     init_vm(&vm);
     dump_vm(&vm);
 
+    // basic program
     uint8_t program[] = {
         0x00, 
         0x10, 
