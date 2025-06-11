@@ -20,10 +20,10 @@ AK-VM v3 is virtual machine written in C that simulates a fantasy 16-bit CPU wit
 ```
 
 ### Addressing modes:
-Immediate (I): literal value
-Register (R): by specified register
-Direct memory (D): by specified address
-Indirect memory (M): by address in specified register
+- Immediate (I): literal value
+- Register (R): by specified register
+- Direct memory (D): by specified address
+- Indirect memory (M): by address in specified register
 
 ### ISA:
 
