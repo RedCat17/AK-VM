@@ -65,15 +65,15 @@ NOP - does nothing
 HLT - stops execution
 ```
 
-Encoding:
+### Encoding:
 Every bytecode is 1-byte, 2-byte or 4-byte depending on instruction. Different addressing modes are actually resolved to different opcodes (e.g ADDI, ADDR). Some opcodes have 1 byte (NOP, HLT, RET), some 2 bytes and some 4.
 Byte 1: [8 bits: opcode]
 Byte 2: [3 bits: reg1, 3 bits: reg2, 2 bits: idk]
 Byte 3-4: [16 bits: immediate or address]
 
-I/O:
+### I/O:
 
-Serial I/O. 
+#### Serial I/O. 
 ```
 [0xFF00] - serial input (RX), read a char;
 [0xFF01] - serial output (TX), write a char;
@@ -90,9 +90,9 @@ Bit | Name          | Meaning
 ... | (others)      | e.g., parity error, framing error, etc.
 
 
-Graphics mode: palette in [0xDF00 - 0xDF1F] and pixel indexes in [0xDF20 - 0xFEFF].
+#### Graphics mode: 
 
-Graphics mode:
+palette in [0xDF00 - 0xDF1F] and pixel indexes in [0xDF20 - 0xFEFF].
 indexed with 16-color palette and 16-bit colors
 160*100 resolution (probably)
 2 pixels per byte
@@ -100,7 +100,7 @@ indexed with 16-color palette and 16-bit colors
 updates triggered via specific address
 
 
-Assembly features:
+### Assembly features:
 - Opcodes resolution;
 - Labels;
 - Raw data embedding (decimal, binary, hex, string);
