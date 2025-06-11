@@ -1,6 +1,6 @@
 AK-VM v3 is virtual machine written in C that simulates a fantasy 16-bit CPU with its own ISA. The goal of the project is to learn how computers actually work on the lowest level, explore systems programming and maybe create a tiny digital microcosm, with its own hardware and software.
 
-Features:
+### Features:
 
 - 8 16-bit general purpose registers and PC, SP, flags (Z, C, S)
 - 64 KB flat memory
@@ -10,40 +10,40 @@ Features:
 - Serial I/O and graphics mode
 - Little-endian
 
-Memory layout:
+### Memory layout:
 [0x0000 - 0x3FFF] - program space (16 KB)
 [0x4000 - 0xD6FF] - general purpose memory (~38 KB)
 [0xD700 - 0xDEFF] - stack (2 KB)
 [0xDF00-0xFEFF] - video memory (8 KB)
 [0xFF00 - 0xFFFF] - other I/O (256 bytes)
 
-Addressing modes:
+### Addressing modes:
 Immediate (I): literal value
 Register (R): by specified register
 Direct memory (D): by specified address
 Indirect memory (M): by address in specified register
 
-ISA:
+### ISA:
 
-Memory:
+#### Memory:
 MOV R I/R - copies value from src to dst
 STOR D/M I/R - stores value from src in memory
 LOAD R D/M - loads value from memory to dst
 PUSH R - pushes value to stack
 POP R - pops value from stack
 
-Arithmetics:
+#### Arithmetics:
 ADD R I/R - adds src to dst
 SUB R I/R - subs src from dst
 INC R - increments by 1
 DEC R - decrements by 1
 
-Bit ops:
+#### Bit ops:
 AND R I/R
 OR R I/R
 XOR R I/R
 
-Control flow:
+#### Control flow:
 CMP R I/R - compares and sets flags
 JMP label - sets PC to said adress
 JZ label - jumps if Z flag is set
