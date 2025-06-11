@@ -11,11 +11,13 @@ AK-VM v3 is virtual machine written in C that simulates a fantasy 16-bit CPU wit
 - Little-endian
 
 ### Memory layout:
+```
 [0x0000 - 0x3FFF] - program space (16 KB)
 [0x4000 - 0xD6FF] - general purpose memory (~38 KB)
 [0xD700 - 0xDEFF] - stack (2 KB)
 [0xDF00-0xFEFF] - video memory (8 KB)
 [0xFF00 - 0xFFFF] - other I/O (256 bytes)
+```
 
 ### Addressing modes:
 Immediate (I): literal value
@@ -26,24 +28,31 @@ Indirect memory (M): by address in specified register
 ### ISA:
 
 #### Memory:
+```
 MOV R I/R - copies value from src to dst
 STOR D/M I/R - stores value from src in memory
 LOAD R D/M - loads value from memory to dst
 PUSH R - pushes value to stack
 POP R - pops value from stack
+```
 
 #### Arithmetics:
+```
 ADD R I/R - adds src to dst
 SUB R I/R - subs src from dst
 INC R - increments by 1
 DEC R - decrements by 1
+```
 
 #### Bit ops:
+```
 AND R I/R
 OR R I/R
 XOR R I/R
+```
 
 #### Control flow:
+```
 CMP R I/R - compares and sets flags
 JMP label - sets PC to said adress
 JZ label - jumps if Z flag is set
@@ -54,6 +63,7 @@ CALL label - saves PC to stack and jumps
 RET - retrieves PC from stack
 NOP - does nothing
 HLT - stops execution
+```
 
 Encoding:
 Every bytecode is 1-byte, 2-byte or 4-byte depending on instruction. Different addressing modes are actually resolved to different opcodes (e.g ADDI, ADDR). Some opcodes have 1 byte (NOP, HLT, RET), some 2 bytes and some 4.
@@ -64,10 +74,12 @@ Byte 3-4: [16 bits: immediate or address]
 I/O:
 
 Serial I/O. 
+```
 [0xFF00] - serial input (RX), read a char;
 [0xFF01] - serial output (TX), write a char;
 [0xFF02] - status register;
 [0xFF03] - refresh screen trigger;
+```
 
 Bit | Name          | Meaning
 ----|---------------|-----------------------------------------
