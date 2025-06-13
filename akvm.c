@@ -6,15 +6,15 @@
 
 #define REG_COUNT 16
 
-#define RAM_ADRESS 0x4000
-#define STACK_ADRESS 0xDEFF
-#define VRAM_ADRESS 0xDF00
-#define IO_ADRESS 0xFF00
+#define RAM_ADDRESS 0x4000
+#define STACK_ADDRESS 0xDEFF
+#define VRAM_ADDRESS 0xDF00
+#define IO_ADDRESS 0xFF00
 
-#define RX_ADRESS 0xFF00
-#define TX_ADRESS 0xFF01
-#define IO_STATUS_ADRESS 0xFF02
-#define REFRESH_SCREEN_ADRESS 0xFF03
+#define RX_ADDRESS 0xFF00
+#define TX_ADDRESS 0xFF01
+#define IO_STATUS_ADDRESS 0xFF02
+#define REFRESH_SCREEN_ADDRESS 0xFF03
 
 #define ZERO_FLAG 0b10000000
 #define CARRY_FLAG 0b01000000
@@ -25,7 +25,7 @@ typedef enum {
     FORMAT_NONE,
     FORMAT_REG,
     FORMAT_REG_REG, 
-    FORMAT_IMM, // can be either immediate or adress
+    FORMAT_IMM, // can be either immediate or address
     FORMAT_REG_IMM, 
 } EncodingFormat;
 
@@ -95,7 +95,7 @@ typedef struct {
 void init_cpu(CPU *cpu) {
     memset(cpu->registers, 0, sizeof(cpu->registers));
     cpu->pc = 0; 
-    cpu->sp = STACK_ADRESS;
+    cpu->sp = STACK_ADDRESS;
     cpu->flags = 0;
 }
 
@@ -142,7 +142,7 @@ void dump_vm(VM *vm) {
     }
     fprintf(stderr, "\nRAM: ");
     for (int i = 0; i < 1024; i++) {
-        fprintf(stderr, "%d ", vm->memory[RAM_ADRESS + i]);
+        fprintf(stderr, "%d ", vm->memory[RAM_ADDRESS + i]);
     }    
     fprintf(stderr, "\n");
 }
@@ -172,8 +172,8 @@ uint16_t sub(CPU *cpu, uint16_t value1, uint16_t value2) {
     return result;
 }
 
-int stor(VM *vm, uint16_t adress, uint16_t value) {
-    if (adress == TX_ADRESS) {
+int stor(VM *vm, uint16_t address, uint16_t value) {
+    if (address == TX_ADDRESS) {
         if (value > 0xFF) { // > 1 byte
             fprintf(stderr, "Can't print > 1 byte!");
             return -1;
@@ -181,17 +181,17 @@ int stor(VM *vm, uint16_t adress, uint16_t value) {
         fprintf(stderr, "Printing %c (ASCII %d)", value, value);
         putchar(value);
     } else {
-    vm->memory[adress] = value & 0x00FF;
-    vm->memory[adress + 1] = (value & 0xFF00) >> 8;
+    vm->memory[address] = value & 0x00FF;
+    vm->memory[address + 1] = (value & 0xFF00) >> 8;
     }
     return 0;
 }
 
-int load(VM *vm, uint8_t reg, uint16_t adress) {
-    if (adress == RX_ADRESS) {
+int load(VM *vm, uint8_t reg, uint16_t address) {
+    if (address == RX_ADDRESS) {
         vm->cpu.registers[reg] = getchar();
     } else {
-    vm->cpu.registers[reg] = vm->memory[adress] | (vm->memory[adress+1] << 8);
+    vm->cpu.registers[reg] = vm->memory[address] | (vm->memory[address+1] << 8);
     }
     return 0;
 }
@@ -407,7 +407,7 @@ void run_vm(VM *vm) {
                 return;
 
         }
-        if (vm->cpu.pc >= RAM_ADRESS) {
+        if (vm->cpu.pc >= RAM_ADDRESS) {
             fprintf(stderr, "PC is outside program space! Halting.\n");
             return;
         }
