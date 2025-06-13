@@ -1,3 +1,5 @@
+import argparse
+
 class EncodingFormat:
     FORMAT_NONE = 0
     FORMAT_REG = 1
@@ -98,50 +100,52 @@ opcode_table = {
             'format': EncodingFormat.FORMAT_REG},
 
 }
-
-with open("program.asm", 'r') as file:
-    instruction_bits = bytearray([])
-    for line in file:
-        tokens = line.strip().split()
-        if not tokens:  # empty line
-            continue
-        if line.startswith(';'): # comment
-            continue
         
-        opcode_name = tokens[0]
-        print(opcode_name)
-        opcode = opcode_table[opcode_name]
-        print(opcode)
-        instruction_bits.append(opcode['opcode'])
-        match opcode['format']:
-            case EncodingFormat.FORMAT_NONE:
-                pass
-            case EncodingFormat.FORMAT_REG:
-                reg_byte = int(tokens[1]) << 4
-                print(bin(reg_byte))
-                instruction_bits.append(reg_byte)
-            case EncodingFormat.FORMAT_REG_REG:
-                reg_byte = int(tokens[1]) << 4 | int(tokens[2])
-                print(bin(reg_byte))
-                instruction_bits.append(reg_byte)
-            case EncodingFormat.FORMAT_IMM:
-                value = int(tokens[1])
-                instruction_bits.append(value & BYTE1)
-                instruction_bits.append((value & BYTE2) >> 8)
-            case EncodingFormat.FORMAT_REG_IMM:
-                reg_byte = int(tokens[1]) << 4
-                print(bin(reg_byte))
-                instruction_bits.append(reg_byte)
-                value = int(tokens[2])
-                instruction_bits.append(value & BYTE1)
-                instruction_bits.append((value & BYTE2) >> 8)
-            case _:
-                print("Unknown encoding format!")
-                break
-            
-            
-            
-    print(instruction_bits)
+def main():
+    parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
 
-with open('program.bin', 'wb') as file:
-    file.write(instruction_bits)
+    parser.add_argument("input_file", help="Path to input source file")
+    parser.add_argument("-o", "--output", help="Path to assembled output file")
+
+    args = parser.parse_args()
+
+    with open(args.input_file, 'r') as file:
+        instruction_bits = bytearray([])
+        for line in file:
+            tokens = line.strip().split()
+            if not tokens:  # empty line
+                continue
+            if line.startswith(';'): # comment
+                continue
+
+            opcode_name = tokens[0]
+            opcode = opcode_table[opcode_name]
+            instruction_bits.append(opcode['opcode'])
+            match opcode['format']:
+                case EncodingFormat.FORMAT_NONE:
+                    pass
+                case EncodingFormat.FORMAT_REG:
+                    reg_byte = int(tokens[1]) << 4
+                    instruction_bits.append(reg_byte)
+                case EncodingFormat.FORMAT_REG_REG:
+                    reg_byte = int(tokens[1]) << 4 | int(tokens[2])
+                    instruction_bits.append(reg_byte)
+                case EncodingFormat.FORMAT_IMM:
+                    value = int(tokens[1])
+                    instruction_bits.append(value & BYTE1)
+                    instruction_bits.append((value & BYTE2) >> 8)
+                case EncodingFormat.FORMAT_REG_IMM:
+                    reg_byte = int(tokens[1]) << 4
+                    instruction_bits.append(reg_byte)
+                    value = int(tokens[2])
+                    instruction_bits.append(value & BYTE1)
+                    instruction_bits.append((value & BYTE2) >> 8)
+                case _:
+                    raise ValueError("Unknown encoding format!")
+                    break
+
+    with open(args.output, 'wb') as file:
+        file.write(instruction_bits)
+
+if __name__ == '__main__':
+    main()

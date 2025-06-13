@@ -351,13 +351,11 @@ void run_vm(VM *vm) {
                 break;
             case 0x12: // PUSHR
                 fprintf(stderr, "PUSH reg %d\n", reg1);
-                vm->memory[vm->cpu.sp] = vm->cpu.registers[reg1];
-                vm->cpu.sp--;
+                exec_push(vm, vm->cpu.registers[reg1]);
                 break;
             case 0x13: // POPR
                 fprintf(stderr, "POP to reg %d\n", reg1);
-                vm->cpu.sp++;
-                vm->cpu.registers[reg1] = vm->memory[vm->cpu.sp];
+                exec_pop(vm, reg1);
                 break;
 
             // Arithmetics
