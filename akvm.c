@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #define REG_COUNT 16
+#define MEMORY_SIZE 0x10000
 
 #define RAM_ADDRESS 0x4000
 #define STACK_ADDRESS 0xDEFF
@@ -20,6 +21,9 @@
 #define CARRY_FLAG 0b01000000
 #define SIGN_FLAG 0b00100000
 // WIP
+
+#define REG1 0b11110000
+#define REG2 0b00001111
 
 typedef enum {
     FORMAT_NONE,
@@ -88,7 +92,7 @@ typedef struct {
 
 typedef struct {
     CPU cpu;
-    uint8_t memory[0x10000]; // 64 KB RAM
+    uint8_t memory[MEMORY_SIZE]; // 64 KB RAM
 } VM;
 
 // initialize CPU, set all registers to zero
@@ -105,7 +109,7 @@ void init_vm(VM *vm) {
     memset(vm->memory, 0, sizeof(vm->memory));
 }
 
-int load_program(VM *vm, const char *filename) {
+int exec_load_program(VM *vm, const char *filename) {
     FILE *file = fopen(filename, "rb");
 
     if (!file) {
@@ -147,12 +151,12 @@ void dump_vm(VM *vm) {
     fprintf(stderr, "\n");
 }
 
-void set_flags(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) { 
-    cpu->flags &= ~(ZERO_FLAG | CARRY_FLAG);   
+void set_flags_sub(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) { 
+    cpu->flags &= ~(ZERO_FLAG | CARRY_FLAG | SIGN_FLAG);   
     if (result == 0) {
         cpu->flags |= ZERO_FLAG;
     }
-    if (result & 0x8000) {
+    if (result & 0x8000) { // MSB
         cpu->flags |= SIGN_FLAG;
     }
     if (a < b) {
@@ -160,19 +164,36 @@ void set_flags(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     }
 }
 
+void set_flags_add(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) { 
+    cpu->flags &= ~(ZERO_FLAG | CARRY_FLAG | SIGN_FLAG);   
+    if (result == 0) {
+        cpu->flags |= ZERO_FLAG;
+    }
+    if (result & 0x8000) { // MSB
+        cpu->flags |= SIGN_FLAG;
+    }
+    if (result < a || result < b) {
+        cpu->flags |= CARRY_FLAG;
+    }
+}
+
 uint16_t add(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 + value2;
-    set_flags(cpu, value1, value2, result);
+    set_flags_add(cpu, value1, value2, result);
     return result;
 }
 
 uint16_t sub(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 - value2;
-    set_flags(cpu, value1, value2, result);
+    set_flags_sub(cpu, value1, value2, result);
     return result;
 }
 
-int stor(VM *vm, uint16_t address, uint16_t value) {
+int exec_stor(VM *vm, uint16_t address, uint16_t value) {
+    if (address < RAM_ADDRESS) {
+        fprintf(stderr, "Segfault! Can't write into program space.\n");
+        return -1;
+    }
     if (address == TX_ADDRESS) {
         if (value > 0xFF) { // > 1 byte
             fprintf(stderr, "Can't print > 1 byte!");
@@ -187,12 +208,31 @@ int stor(VM *vm, uint16_t address, uint16_t value) {
     return 0;
 }
 
-int load(VM *vm, uint8_t reg, uint16_t address) {
+int exec_load(VM *vm, uint8_t reg, uint16_t address) {
     if (address == RX_ADDRESS) {
         vm->cpu.registers[reg] = getchar();
     } else {
-    vm->cpu.registers[reg] = vm->memory[address] | (vm->memory[address+1] << 8);
+    vm->cpu.registers[reg] = (vm->memory[address+1] << 8) | vm->memory[address];
     }
+    return 0;
+}
+
+int exec_push(VM *vm, uint16_t value) {
+    if (vm->cpu.sp > STACK_ADDRESS) {
+        fprintf(stderr, "Stack underflow!\n");
+        return -1;
+    }
+    vm->memory[vm->cpu.sp--] = value & 0x00FF;
+    vm->memory[vm->cpu.sp--] = (value & 0xFF00) >> 8;
+    return 0;
+}
+
+int exec_pop(VM *vm, uint8_t reg) {
+    if (vm->cpu.sp > STACK_ADDRESS) {
+        fprintf(stderr, "Stack underflow!\n");
+        return -1;
+    }
+    vm->cpu.registers[reg] = vm->memory[++vm->cpu.sp] | (vm->memory[++vm->cpu.sp] << 8) ;
     return 0;
 }
 
@@ -200,27 +240,27 @@ int load(VM *vm, uint8_t reg, uint16_t address) {
 void run_vm(VM *vm) {
     for (;;) {
         uint8_t opcode = vm->memory[vm->cpu.pc++];
-        uint8_t reg1 = 0, reg2 = 0; uint16_t value = 0;
-        uint16_t result;
+        uint8_t reg_byte; uint8_t reg1 = 0, reg2 = 0; uint16_t value = 0;
+        uint16_t result; 
         OpcodeData opcode_data = opcode_table[opcode];
         switch (opcode_data.format) {
             case FORMAT_NONE:
                 break;
             case FORMAT_REG:
-                uint8_t byte = vm->memory[vm->cpu.pc++];
-                reg1 = (byte & 0b11110000) >> 4;
+                reg_byte = vm->memory[vm->cpu.pc++];
+                reg1 = (reg_byte & REG1) >> 4;
                 break;
             case FORMAT_REG_REG:
-                byte = vm->memory[vm->cpu.pc++];
-                reg1 = (byte & 0b11110000) >> 4;
-                reg2 = (byte & 0b00001111);
+                reg_byte = vm->memory[vm->cpu.pc++];
+                reg1 = (reg_byte & REG1) >> 4;
+                reg2 = (reg_byte & REG2);
                 break;
             case FORMAT_IMM:
                 value = vm->memory[vm->cpu.pc++] | (vm->memory[vm->cpu.pc++] << 8);
                 break;
             case FORMAT_REG_IMM:
-                byte = vm->memory[vm->cpu.pc++];
-                reg1 = (byte & 0b11110000) >> 4;
+                reg_byte = vm->memory[vm->cpu.pc++];
+                reg1 = (reg_byte & REG1) >> 4;
                 value = vm->memory[vm->cpu.pc++] | (vm->memory[vm->cpu.pc++] << 8);
                 break;
         }
@@ -291,23 +331,23 @@ void run_vm(VM *vm) {
                 break;
             case 0x0D: // STORDR
                 fprintf(stderr, "STOR adr %X <- reg %d\n", value, reg1);
-                stor(vm, value, vm->cpu.registers[reg1]);
+                exec_stor(vm, value, vm->cpu.registers[reg1]);
                 break;
             case 0x0E: // STORMI
                 fprintf(stderr, "STOR ind %d <- imm %d\n", reg1, value);
-                stor(vm, vm->cpu.registers[reg1], value);
+                exec_stor(vm, vm->cpu.registers[reg1], value);
                 break;
             case 0x0F: // STORMR
                 fprintf(stderr, "STOR ind %d <- reg2 %d\n", reg1, reg2);
-                stor(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                exec_stor(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
             case 0x10: // LOADRD
                 fprintf(stderr, "LOAD reg %d <- adr %X\n", value, reg1);
-                load(vm, reg1, value);
+                exec_load(vm, reg1, value);
                 break;
             case 0x11: // LOADRM
                 fprintf(stderr, "LOAD reg %d <- ind %d\n", reg1, reg2);
-                load(vm, reg1, vm->cpu.registers[reg2]);
+                exec_load(vm, reg1, vm->cpu.registers[reg2]);
                 break;
             case 0x12: // PUSHR
                 fprintf(stderr, "PUSH reg %d\n", reg1);
@@ -440,7 +480,7 @@ int main() {
     // };
     // memcpy(vm.memory, program, sizeof(program));
 
-    load_program(&vm, "program.bin");
+    exec_load_program(&vm, "program.bin");
 
     run_vm(&vm);
     dump_vm(&vm);
