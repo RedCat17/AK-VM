@@ -236,6 +236,26 @@ int exec_pop(VM *vm, uint8_t reg) {
     return 0;
 }
 
+int exec_call(VM *vm, uint16_t address) {
+    if (vm->cpu.sp > STACK_ADDRESS) {
+        fprintf(stderr, "Stack underflow!\n");
+        return -1;
+    }
+    vm->memory[vm->cpu.sp--] = vm->cpu.pc & 0x00FF;
+    vm->memory[vm->cpu.sp--] = (vm->cpu.pc & 0xFF00) >> 8;
+    vm->cpu.pc = address;
+    return 0;
+}
+
+int exec_ret(VM *vm) {
+    if (vm->cpu.sp > STACK_ADDRESS) {
+        fprintf(stderr, "Stack underflow!\n");
+        return -1;
+    }
+    vm->cpu.pc = vm->memory[++vm->cpu.sp] | (vm->memory[++vm->cpu.sp] << 8) ;
+    return 0;
+}
+
 // fetch-decode-execute loop
 void run_vm(VM *vm) {
     for (;;) {
@@ -314,11 +334,13 @@ void run_vm(VM *vm) {
                 }
                 break;
             case 0x09: // CALL
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "CALL adr %X\n", value);
+                exec_call(vm, value);
+                break;
             case 0x0A: // RET
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "RET\n");
+                exec_ret(vm);
+                break;
 
             // Memory
             case 0x0B: // MOVRR
