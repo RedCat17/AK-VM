@@ -12,9 +12,9 @@
 #define IO_ADDRESS       0xF800
 #define STACK_ADDRESS    0xF900
 
-#define RX_ADDRESS              0xFF00
-#define TX_ADDRESS              0xFF01
-#define REFRESH_SCREEN_ADDRESS  0xFF03
+#define RX_ADDRESS              0xF800
+#define TX_ADDRESS              0xF801
+#define REFRESH_SCREEN_ADDRESS  0xF802
 
 #define ZERO_FLAG  0b10000000
 #define CARRY_FLAG 0b01000000

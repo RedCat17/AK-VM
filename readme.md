@@ -102,11 +102,10 @@ Byte 3-4: [16 bits: immediate or address]
 
 #### Serial I/O. 
 ```
-[0xFF00] - serial input (RX), read a char;
-[0xFF01] - serial output (TX), write a char;
-[0xFF03] - refresh screen trigger;
+[0xF800] - serial input (RX), read a char;
+[0xF801] - serial output (TX), write a char;
+[0xF802] - refresh screen trigger;
 ```
-
 
 #### Graphics mode: 
 - monochrome
