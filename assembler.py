@@ -181,13 +181,12 @@ def parse_imm(value: str):
         return int(value, 16)
     if value.startswith('0b'):
         return int(value, 2)
+    if value.startswith("'") and value.endswith("'"):
+        return ord(value)
     try:
         return int(value, 10)
     except:
-        try:
-            return ord(value)
-        except:
-            raise ValueError("Invalid value!")
+        raise ValueError("Invalid value!")
         
 def main():
     parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
@@ -213,6 +212,8 @@ def main():
                 cur_address += FORMAT_LENGTHS[opcode['format']]
             elif instruction == '.DB':
                 cur_address += len(instr_args)
+            elif instruction == '.STR':
+                cur_address += len(' '.join(instr_args).strip('"'))
             else:
                 raise ValueError(f"Unknown instruction: {instruction}")
                 break
@@ -274,6 +275,15 @@ def main():
                 case '.DB':
                     for arg in instr_args:
                         byte = parse_imm(arg)
+                        if args.verbose: 
+                            print(f"{hex(cur_address)}: {byte}")
+                        instruction_bits.append(byte)
+                        cur_address += 1
+                case '.STR':
+                    string = ' '.join(instr_args).strip('"')
+                    print(f"string: {string}")
+                    for char in string:
+                        byte = ord(char)
                         if args.verbose: 
                             print(f"{hex(cur_address)}: {byte}")
                         instruction_bits.append(byte)

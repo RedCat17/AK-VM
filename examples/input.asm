@@ -2,9 +2,9 @@
 ; It tests input and RAM
 JMP start
 msg1:
-.DB E n t e r 32 a 32 s t r i n g : 10
+.STR "Enter a string: "
 msg2:
-.DB Y o u 32 e n t e r e d : 32
+.STR "You entered: "
 
 start:
 MOVRI 0 msg1

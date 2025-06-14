@@ -1,7 +1,7 @@
 ; This program outputs "Hello world!" 
 ; It tests memory, I/O, loops, labels
 JMP start
-.DB H e l l o 32 w o r l d !
+.STR Hello world!
 
 start:
 MOVRI 0 3

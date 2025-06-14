@@ -84,6 +84,7 @@ OR R R/I
 XOR R R/I
 NOT R
 SHR R
+```
 
 ### Encoding:
 Every bytecode is 1-byte, 2-byte or 4-byte depending on instruction. Different addressing modes are actually resolved to different opcodes (e.g ADDI, ADDR). Some opcodes have 1 byte (NOP, HLT, RET), some 2 bytes and some 4.
@@ -103,17 +104,8 @@ Byte 3-4: [16 bits: immediate or address]
 ```
 [0xFF00] - serial input (RX), read a char;
 [0xFF01] - serial output (TX), write a char;
-[0xFF02] - status register;
 [0xFF03] - refresh screen trigger;
 ```
-
-Bit | Name          | Meaning
-----|---------------|-----------------------------------------
- 0  | RX_READY      | 1 = New byte is available in RX
- 1  | TX_READY      | 1 = TX is ready to accept a new byte
- 2  | RX_OVERFLOW   | 1 = RX was overwritten before being read
- 3  | TX_BUSY       | 1 = TX is still sending previous byte
-... | (others)      | e.g., parity error, framing error, etc.
 
 
 #### Graphics mode: 
