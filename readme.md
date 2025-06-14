@@ -1,6 +1,17 @@
-AK-VM v3 is virtual machine written in C that simulates a fantasy 16-bit CPU with its own ISA. The goal of the project is to learn how computers actually work on the lowest level, explore systems programming and maybe create a tiny digital microcosm, with its own hardware and software.
+AK-VM-1 is virtual machine written in C that simulates a fantasy 16-bit CPU with its own ISA. The goal of the project is to learn how computers actually work on the lowest level, explore systems programming and maybe create a tiny digital microcosm, with its own hardware and software.
 
 ALL CODE IS ENTIRELY HUMAN-WRITTEN (NO AI).
+
+### Usage:
+Assembling program.asm into output.bin binary:
+```
+python assembler.py program.asm -o output.bin
+```
+
+Running output.bin:
+```
+./akvm output.bin
+```
 
 ### Features:
 
