@@ -235,26 +235,31 @@ void set_flags_add(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     }
 }
 
-uint16_t add(CPU *cpu, uint16_t value1, uint16_t value2) {
+uint16_t cpu_add(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 + value2;
     set_flags_add(cpu, value1, value2, result);
     return result;
 }
 
-uint16_t sub(CPU *cpu, uint16_t value1, uint16_t value2) {
+uint16_t cpu_sub(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 - value2;
     set_flags_sub(cpu, value1, value2, result);
     return result;
 }
 
-uint16_t mul(CPU *cpu, uint16_t value1, uint16_t value2) {
+uint16_t cpu_mul(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 * value2;
     set_flags_add(cpu, value1, value2, result);
     return result;
 }
 
-uint16_t div(CPU *cpu, uint16_t value1, uint16_t value2) {
-    uint16_t result = value1 / value2;
+uint16_t cpu_div(CPU *cpu, uint16_t value1, uint16_t value2) {
+    uint16_t result;
+    if (value2 == 0) {
+        result = 0;
+    } else {
+        result = value1 / value2;        
+    }
     set_flags_add(cpu, value1, value2, result);
     return result;
 }
@@ -388,11 +393,11 @@ void run_vm(VM *vm) {
                 return;
             case OPCODE_CMPRR: 
                 fprintf(stderr, "CMP reg %d reg %d\n", reg1, reg2);
-                sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
             case OPCODE_CMPRI: 
                 fprintf(stderr, "CMP reg %d imm %d\n", reg1, value);
-                sub(&vm->cpu, vm->cpu.registers[reg1], value);
+                cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 break;
             case OPCODE_JMP: 
                 fprintf(stderr, "JMP adr %X\n", value);
@@ -496,52 +501,52 @@ void run_vm(VM *vm) {
             // Arithmetics
             case OPCODE_ADDRR: 
                 fprintf(stderr, "ADD reg %d <- reg %d\n", reg1, reg2);
-                result = add(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_ADDRI: 
                 fprintf(stderr, "ADD reg %d <- imm %d\n", reg1, value);
-                result = add(&vm->cpu, vm->cpu.registers[reg1], value);
+                result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_SUBRR: 
                 fprintf(stderr, "SUB reg %d <- reg %d\n", reg1, reg2);
-                result = sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_SUBRI: 
                 fprintf(stderr, "SUB reg %d <- imm %d\n", reg1, value);
-                result = sub(&vm->cpu, vm->cpu.registers[reg1], value);
+                result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_INCR: 
                 fprintf(stderr, "INC reg %d\n", reg1);
-                result = add(&vm->cpu, vm->cpu.registers[reg1], 1);
+                result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DECR: 
                 fprintf(stderr, "DEC reg %d\n", reg1);
-                result = sub(&vm->cpu, vm->cpu.registers[reg1], 1);
+                result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_MULRR: 
                 fprintf(stderr, "MUL reg %d <- reg %d\n", reg1, reg2);
-                result = mul(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_MULRI: 
                 fprintf(stderr, "MUL reg %d <- imm %d\n", reg1, value);
-                result = mul(&vm->cpu, vm->cpu.registers[reg1], value);
+                result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DIVRR: 
                 fprintf(stderr, "DIV reg %d <- reg %d\n", reg1, reg2);
-                result = div(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DIVRI: 
                 fprintf(stderr, "DIV reg %d <- imm %d\n", reg1, value);
-                result = div(&vm->cpu, vm->cpu.registers[reg1], value);
+                result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
 
