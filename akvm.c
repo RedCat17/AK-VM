@@ -475,7 +475,13 @@ void run_vm(VM *vm) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Program file not specified!");
+        return 1;
+    }
+
+    char *program_path = argv[1];
     VM vm;
     init_vm(&vm);
 
@@ -500,7 +506,9 @@ int main() {
     // };
     // memcpy(vm.memory, program, sizeof(program));
 
-    exec_load_program(&vm, "program.bin");
+    if (exec_load_program(&vm, program_path) == -1) {
+        return 1;
+    }
 
     run_vm(&vm);
     dump_vm(&vm);

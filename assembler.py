@@ -100,6 +100,20 @@ opcode_table = {
             'format': EncodingFormat.FORMAT_REG},
 
 }
+
+def parse_imm(value: str):
+    if value.startswith('0x'):
+        return int(value, 16)
+    elif value.startswith('0b'):
+        return int(value, 2)
+    else:
+        try:
+            return int(value, 10)
+        except:
+            try:
+                return ord(value)
+            except:
+                raise ValueError("Invalid value!")
         
 def main():
     parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
@@ -112,39 +126,51 @@ def main():
     with open(args.input_file, 'r') as file:
         instruction_bits = bytearray([])
         for line in file:
-            tokens = line.strip().split()
-            if not tokens:  # empty line
-                continue
+            line = line.strip().upper()
             if line.startswith(';'): # comment
                 continue
+            tokens = line.split()
+            if not tokens:  # empty line
+                continue
 
-            opcode_name = tokens[0]
-            opcode = opcode_table[opcode_name]
-            instruction_bits.append(opcode['opcode'])
-            match opcode['format']:
-                case EncodingFormat.FORMAT_NONE:
-                    pass
-                case EncodingFormat.FORMAT_REG:
-                    reg_byte = int(tokens[1]) << 4
-                    instruction_bits.append(reg_byte)
-                case EncodingFormat.FORMAT_REG_REG:
-                    reg_byte = int(tokens[1]) << 4 | int(tokens[2])
-                    instruction_bits.append(reg_byte)
-                case EncodingFormat.FORMAT_IMM:
-                    value = int(tokens[1])
-                    instruction_bits.append(value & BYTE1)
-                    instruction_bits.append((value & BYTE2) >> 8)
-                case EncodingFormat.FORMAT_REG_IMM:
-                    reg_byte = int(tokens[1]) << 4
-                    instruction_bits.append(reg_byte)
-                    value = int(tokens[2])
-                    instruction_bits.append(value & BYTE1)
-                    instruction_bits.append((value & BYTE2) >> 8)
-                case _:
-                    raise ValueError("Unknown encoding format!")
-                    break
+            instruction, *instr_args = tokens
 
-    with open(args.output, 'wb') as file:
+            if instruction in opcode_table:
+                opcode = opcode_table[instruction]
+                instruction_bits.append(opcode['opcode'])
+                match opcode['format']:
+                    case EncodingFormat.FORMAT_NONE:
+                        pass
+                    case EncodingFormat.FORMAT_REG:
+                        reg_byte = parse_imm(instr_args[0]) << 4
+                        instruction_bits.append(reg_byte)
+                    case EncodingFormat.FORMAT_REG_REG:
+                        reg_byte = parse_imm(instr_args[0]) << 4 | parse_imm(instr_args[1])
+                        instruction_bits.append(reg_byte)
+                    case EncodingFormat.FORMAT_IMM:
+                        value = parse_imm(instr_args[0])
+                        instruction_bits.append(value & BYTE1)
+                        instruction_bits.append((value & BYTE2) >> 8)
+                    case EncodingFormat.FORMAT_REG_IMM:
+                        reg_byte = parse_imm(instr_args[0]) << 4
+                        instruction_bits.append(reg_byte)
+                        value = parse_imm(instr_args[1])
+                        instruction_bits.append(value & BYTE1)
+                        instruction_bits.append((value & BYTE2) >> 8)
+                    case _:
+                        raise ValueError("Unknown encoding format!")
+                        break
+            else: 
+                match instruction:
+                    case '. DB':
+                        for arg in instr_args:
+                            instruction_bits.append(parse_imm(arg))
+
+
+            
+
+    output_path = args.output or args.input_file + '.bin'
+    with open(output_path, 'wb') as file:
         file.write(instruction_bits)
 
 if __name__ == '__main__':
