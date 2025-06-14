@@ -83,7 +83,7 @@ AND R R/I
 OR R R/I
 XOR R R/I
 NOT R
-SHR R«обеспечение максимального удовлетворения постоянно растущих материальных и культурных потребностей всего общества путём непрерывного роста и совершенствования социалистического производства на базе высшей техники»
+SHR R
 
 ### Encoding:
 Every bytecode is 1-byte, 2-byte or 4-byte depending on instruction. Different addressing modes are actually resolved to different opcodes (e.g ADDI, ADDR). Some opcodes have 1 byte (NOP, HLT, RET), some 2 bytes and some 4.
