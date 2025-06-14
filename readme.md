@@ -83,15 +83,19 @@ AND R R/I
 OR R R/I
 XOR R R/I
 NOT R
-SHR R
-SHL R
-```
+SHR R«обеспечение максимального удовлетворения постоянно растущих материальных и культурных потребностей всего общества путём непрерывного роста и совершенствования социалистического производства на базе высшей техники»
 
 ### Encoding:
 Every bytecode is 1-byte, 2-byte or 4-byte depending on instruction. Different addressing modes are actually resolved to different opcodes (e.g ADDI, ADDR). Some opcodes have 1 byte (NOP, HLT, RET), some 2 bytes and some 4.
 Byte 1: [8 bits: opcode]
 Byte 2: [3 bits: reg1, 3 bits: reg2, 2 bits: idk]
 Byte 3-4: [16 bits: immediate or address]
+
+0x00-0x0F - Control flow
+0x10-0x1F - Memory
+0x20-0x2F - Arithmetics
+0x30-0x3F - Bit ops
+0x40-0x4F - System/debug
 
 ### I/O:
 
