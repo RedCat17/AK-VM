@@ -13,6 +13,11 @@ Running output.bin:
 ./akvm output.bin
 ```
 
+Redirecting debug output to file:
+```
+./akvm program.bin 2> output.txt
+```
+
 ### Features:
 
 - 8 16-bit general purpose registers and PC, SP, flags (Z, C, S)
