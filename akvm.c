@@ -477,7 +477,7 @@ void run_vm(VM *vm) {
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Program file not specified!");
+        fprintf(stderr, "Program file not specified!\n");
         return 1;
     }
 
