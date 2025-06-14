@@ -30,11 +30,11 @@ Redirecting debug output to file:
 
 ### Memory layout:
 ```
-[0x0000 - 0x3FFF] - program space (16 KB)
-[0x4000 - 0xD6FF] - general purpose memory (~38 KB)
-[0xD700 - 0xDEFF] - stack (2 KB)
-[0xDF00-0xFEFF] - video memory (8 KB)
-[0xFF00 - 0xFFFF] - other I/O (256 bytes)
+[0x0000 - 0x3FFF] - Program Space (16 KB)
+[0x4000 - 0xEFFF] - Heap (~44 KB) 
+[0xF000 - 0xF7FF] - Video Buffer (2 KB)
+[0xF800 - 0xF8FF] - Mapped I/O (256 bytes)
+[0xF900 - 0xFFFF] - Stack (2 KB, grows downward)
 ```
 
 ### Addressing modes:
@@ -109,13 +109,11 @@ Byte 3-4: [16 bits: immediate or address]
 
 
 #### Graphics mode: 
-
-palette in [0xDF00 - 0xDF1F] and pixel indexes in [0xDF20 - 0xFEFF].
-indexed with 16-color palette and 16-bit colors
-160*100 resolution (probably)
-2 pixels per byte
-8 kB framebuffer
-updates triggered via specific address
+- monochrome
+- 160*100 resolution (probably)
+- 8 pixels per byte
+- 2 kB framebuffer
+- updates triggered via specific address
 
 
 ### Assembly features:

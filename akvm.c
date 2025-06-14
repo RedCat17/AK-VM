@@ -7,14 +7,13 @@
 #define REG_COUNT 16
 #define MEMORY_SIZE 0x10000
 
-#define RAM_ADDRESS      0x4000
-#define STACK_ADDRESS    0xDEFF
-#define VRAM_ADDRESS     0xDF00
-#define IO_ADDRESS       0xFF00
+#define HEAP_ADDRESS     0x4000
+#define VRAM_ADDRESS     0xF000
+#define IO_ADDRESS       0xF800
+#define STACK_ADDRESS    0xF900
 
 #define RX_ADDRESS              0xFF00
 #define TX_ADDRESS              0xFF01
-#define IO_STATUS_ADDRESS       0xFF02
 #define REFRESH_SCREEN_ADDRESS  0xFF03
 
 #define ZERO_FLAG  0b10000000
@@ -204,7 +203,7 @@ void dump_vm(VM *vm) {
     }
     fprintf(stderr, "\nRAM: ");
     for (int i = 0; i < 1024; i++) {
-        fprintf(stderr, "%d ", vm->memory[RAM_ADDRESS + i]);
+        fprintf(stderr, "%d ", vm->memory[HEAP_ADDRESS + i]);
     }    
     fprintf(stderr, "\n");
 }
@@ -265,8 +264,12 @@ uint16_t cpu_div(CPU *cpu, uint16_t value1, uint16_t value2) {
 }
 
 int exec_stor(VM *vm, uint16_t address, uint16_t value) {
-    if (address < RAM_ADDRESS) {
+    if (address < HEAP_ADDRESS) {
         fprintf(stderr, "Segfault! Can't write into program space.\n");
+        return -1;
+    }
+    if (address >= STACK_ADDRESS) {
+        fprintf(stderr, "Segfault! Can't write into stack.\n");
         return -1;
     }
     if (address == TX_ADDRESS) {
@@ -293,8 +296,12 @@ int exec_load(VM *vm, uint8_t reg, uint16_t address) {
 }
 
 int exec_storb(VM *vm, uint16_t address, uint8_t value) {
-    if (address < RAM_ADDRESS) {
+    if (address < HEAP_ADDRESS) {
         fprintf(stderr, "Segfault! Can't write into program space.\n");
+        return -1;
+    }
+    if (address >= STACK_ADDRESS) {
+        fprintf(stderr, "Segfault! Can't write into stack.\n");
         return -1;
     }
     if (address == TX_ADDRESS) {
@@ -593,7 +600,7 @@ void run_vm(VM *vm) {
                 return;
 
         }
-        if (vm->cpu.pc >= RAM_ADDRESS) {
+        if (vm->cpu.pc >= HEAP_ADDRESS) {
             fprintf(stderr, "PC is outside program space! Halting.\n");
             return;
         }
