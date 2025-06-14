@@ -247,6 +247,18 @@ uint16_t sub(CPU *cpu, uint16_t value1, uint16_t value2) {
     return result;
 }
 
+uint16_t mul(CPU *cpu, uint16_t value1, uint16_t value2) {
+    uint16_t result = value1 * value2;
+    set_flags_add(cpu, value1, value2, result);
+    return result;
+}
+
+uint16_t div(CPU *cpu, uint16_t value1, uint16_t value2) {
+    uint16_t result = value1 / value2;
+    set_flags_add(cpu, value1, value2, result);
+    return result;
+}
+
 int exec_stor(VM *vm, uint16_t address, uint16_t value) {
     if (address < RAM_ADDRESS) {
         fprintf(stderr, "Segfault! Can't write into program space.\n");
@@ -513,17 +525,25 @@ void run_vm(VM *vm) {
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_MULRR: 
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "MUL reg %d <- reg %d\n", reg1, reg2);
+                result = mul(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                vm->cpu.registers[reg1] = result;
+                break;
             case OPCODE_MULRI: 
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "MUL reg %d <- imm %d\n", reg1, value);
+                result = mul(&vm->cpu, vm->cpu.registers[reg1], value);
+                vm->cpu.registers[reg1] = result;
+                break;
             case OPCODE_DIVRR: 
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "DIV reg %d <- reg %d\n", reg1, reg2);
+                result = div(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                vm->cpu.registers[reg1] = result;
+                break;
             case OPCODE_DIVRI: 
-                fprintf(stderr, "NOT IMPLEMENTED! Halting.\n");
-                return;
+                fprintf(stderr, "DIV reg %d <- imm %d\n", reg1, value);
+                result = div(&vm->cpu, vm->cpu.registers[reg1], value);
+                vm->cpu.registers[reg1] = result;
+                break;
 
             // Bit ops
             case OPCODE_ANDRR:
