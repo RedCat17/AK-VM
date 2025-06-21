@@ -172,6 +172,7 @@ opcode_table = {
 }
 
 labels = {}
+macros = {}
 
 def parse_imm(value: str):
     # print(f"Parsing {value}")
@@ -200,8 +201,8 @@ def main():
     with open(args.input_file, 'r') as file:
         lines = [line.strip() for line in file.readlines() if (line.strip() and not line.startswith(';'))]
 
-    cur_address = 0
     # label collecting
+    cur_address = 0
     for line in lines:
         if line.endswith(':'):
             labels[line[:-1]] = cur_address
@@ -214,10 +215,13 @@ def main():
                 cur_address += len(instr_args)
             elif instruction == '.STR':
                 cur_address += len(' '.join(instr_args).strip('"'))
+            elif instruction == '.DEF':
+                macros[instr_args[0]] = ' '.join(instr_args[1:])
             else:
                 raise ValueError(f"Unknown instruction: {instruction}")
                 break
     print(labels)
+    print(macros)
 
 
     # actual assebmling
@@ -228,9 +232,16 @@ def main():
         line = line.strip()
         if line.startswith(';'): # comment
             continue
-        tokens = line.split()
+        tokens = line.split()                
         if not tokens:  # empty line
             continue
+        new_tokens = []
+        for token in tokens:
+            if token in macros:
+                new_tokens.append(macros[token])
+            else:
+                new_tokens.append(token)
+        tokens = new_tokens  
 
         instruction, *instr_args = tokens
         instruction = instruction.upper()
