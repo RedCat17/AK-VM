@@ -1,29 +1,31 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 
 #define REG_COUNT 16
-#define MEMORY_SIZE 0x10000
+#define MEMORY_SIZE 0x10000 // 64 KB
 
+// Memory layout
 #define HEAP_ADDRESS     0x4000
 #define VRAM_ADDRESS     0xF000
 #define IO_ADDRESS       0xF800
 #define STACK_ADDRESS    0xF900
 
-#define RX_ADDRESS              0xF800
-#define TX_ADDRESS              0xF801
+#define RX_ADDRESS              0xF800 // Writing to this address prints to console
+#define TX_ADDRESS              0xF801 // Reading from here reads from console
 #define REFRESH_SCREEN_ADDRESS  0xF802
 
+// FLAGS register is split into bits using these bitmasks:
 #define ZERO_FLAG  0b10000000
 #define CARRY_FLAG 0b01000000
 #define SIGN_FLAG  0b00100000
 // WIP
 
+// Masks for register encoding in bytecode:
 #define REG1 0b11110000
 #define REG2 0b00001111
 
+// Opcodes
 // Control flow
 #define OPCODE_NOP     0x00
 #define OPCODE_HLT     0x01
@@ -76,6 +78,7 @@
 #define OPCODE_SHRR    0x37
 #define OPCODE_SHLR    0x38
 
+// Encoding formats enum
 typedef enum {
     FORMAT_NONE,
     FORMAT_REG,
@@ -84,11 +87,13 @@ typedef enum {
     FORMAT_REG_IMM, 
 } EncodingFormat;
 
+// Opcode struct for storing name and format
 typedef struct {
     const char *name;
     EncodingFormat format;
 } OpcodeData;
 
+// Opcode table
 OpcodeData opcode_table[256] = {
     // Control flow
     [OPCODE_NOP]   = {"NOP",   FORMAT_NONE},
@@ -141,12 +146,14 @@ OpcodeData opcode_table[256] = {
     [OPCODE_SHLR]   = {"SHLR",   FORMAT_REG},
 };
 
+// CPU struct stores CPU internal data: registers, PC, SP and flags
 typedef struct {
     uint16_t registers[REG_COUNT];
     uint16_t pc, sp;
     uint8_t flags;
 } CPU;
 
+// VM struct stores CPU and RAM
 typedef struct {
     CPU cpu;
     uint8_t memory[MEMORY_SIZE]; // 64 KB RAM
@@ -166,6 +173,7 @@ void init_vm(VM *vm) {
     memset(vm->memory, 0, sizeof(vm->memory));
 }
 
+// Opens program from file and executes it byte-by-byte
 int exec_load_program(VM *vm, const char *filename) {
     FILE *file = fopen(filename, "rb");
 
@@ -208,6 +216,7 @@ void dump_vm(VM *vm) {
     fprintf(stderr, "\n");
 }
 
+// set flags after substraction
 void set_flags_sub(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) { 
     cpu->flags &= ~(ZERO_FLAG | CARRY_FLAG | SIGN_FLAG);   
     if (result == 0) {
@@ -221,6 +230,7 @@ void set_flags_sub(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     }
 }
 
+// set flags after addition
 void set_flags_add(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) { 
     cpu->flags &= ~(ZERO_FLAG | CARRY_FLAG | SIGN_FLAG);   
     if (result == 0) {
