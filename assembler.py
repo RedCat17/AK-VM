@@ -179,7 +179,7 @@ class TokenTypes:
 # Token format: (TYPE, VALUE)
 
 SINGLE_CHAR_OPERATORS = ['+', '-', '*', '/', '(', ')', '&', '|', '^', '!']
-DOUBLE_CHAR_OPERATORS = ['<<', '>>']
+DOUBLE_CHAR_OPERATORS = ['<<', '>>', '==', '!=']
 
 OPERATOR_PRIORITIES = { # higher = lower priority
     '!': 0,
@@ -191,7 +191,9 @@ OPERATOR_PRIORITIES = { # higher = lower priority
     '>>': 3,
     '^': 4,
     '&': 5,
-    '|': 6
+    '|': 6,
+    '==': 7,
+    '!=': 7
 }
 
 UNARY_OPERATORS = ['!', '-', '+']
@@ -338,6 +340,10 @@ def recursive_eval(tokens):
             return first_half_eval * second_half_eval
         if operator == '/':
             return first_half_eval // second_half_eval
+        if operator == '==':
+            return first_half_eval == second_half_eval
+        if operator == '!=':
+            return first_half_eval != second_half_eval
         else: 
             raise ValueError(f"Operator not implemented: {operator}")
     elif second_half:

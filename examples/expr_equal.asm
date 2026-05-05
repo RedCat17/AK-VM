@@ -1,0 +1,20 @@
+; This program should test == and != operators.
+; Expected output: 101
+
+.DEF OUT_ADDRESS 0xF801
+
+.DEF A 4
+
+MOVRI 0, A == 4
+ADDRI 0, 48
+STORBDR 0, OUT_ADDRESS 
+
+MOVRI 0, A == 2
+ADDRI 0, 48
+STORBDR 0, OUT_ADDRESS 
+
+MOVRI 0, A != 3
+ADDRI 0, 48
+STORBDR 0, OUT_ADDRESS 
+
+HLT
