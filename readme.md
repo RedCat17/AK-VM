@@ -107,16 +107,9 @@ Byte 3-4: [16 bits: immediate or address]
 [0xF802] - refresh screen trigger;
 ```
 
-#### Graphics mode: 
-- monochrome
-- 160*100 resolution (probably)
-- 8 pixels per byte
-- 2 kB framebuffer
-- updates triggered via specific address
-
-
 ### Assembly features:
 - Opcodes resolution;
 - Labels;
 - Raw data embedding (decimal, binary, hex, string);
-- Macros/constants.
+- Macros/constants;
+- Expression evaluation.

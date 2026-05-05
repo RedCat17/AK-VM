@@ -171,24 +171,193 @@ opcode_table = {
              'format': EncodingFormat.FORMAT_REG},
 }
 
+class TokenTypes:
+    NUMBER = 0
+    IDENT = 1
+    OP = 2
+    STRING = 3
+# Token format: (TYPE, VALUE)
+
+SINGLE_CHAR_OPERATORS = ['+', '-', '*', '/', '(', ')', '&', '|', '^', '!']
+DOUBLE_CHAR_OPERATORS = ['<<', '>>']
+
+OPERATOR_PRIORITIES = { # higher = lower priority
+    '!': 0,
+    '*': 1,
+    '/': 1,
+    '+': 2,
+    '-': 2,
+    '<<': 3,
+    '>>': 3,
+    '^': 4,
+    '&': 5,
+    '|': 6
+}
+
+UNARY_OPERATORS = ['!', '-', '+']
+
+def verify_ident(value: str):
+    if value[0].isnumeric():
+        raise ValueError(f'Ident cant begin with number: {value}')
+    for char in value:
+        if not (char.isalnum() or char == '_'):
+            raise ValueError(f'Illegal characters in ident: {value}')
+
+def verify_number(value: str):
+    if value.startswith(('0x', '0b')):
+        value = value[2:]
+    elif not value.isdigit():
+        raise ValueError(f'Invalid number: {value}')
+
+def tokenize_expr(string: str):
+    def flush_token():
+        if i > last_i:
+            token = string[last_i:i]
+            if token[0].isdigit():
+                verify_number(token)
+                tokens.append((TokenTypes.NUMBER, token))
+            else:
+                verify_ident(token)
+                tokens.append((TokenTypes.IDENT, token))
+    tokens = []
+    last_i = 0
+    i = 0
+    while i < len(string):
+        if string[i].isspace():
+            flush_token()
+            i += 1
+            last_i = i
+            continue
+
+        if i + 1 < len(string) and string[i:i+2] in DOUBLE_CHAR_OPERATORS:
+            flush_token()
+            tokens.append((TokenTypes.OP, string[i:i+2]))
+            i += 2
+            last_i = i
+            continue
+
+        if string[i] in SINGLE_CHAR_OPERATORS:
+            flush_token()
+            tokens.append((TokenTypes.OP, string[i]))
+            i += 1
+            last_i = i
+            continue
+
+        i += 1
+    flush_token()
+    return tokens
+
+def recursive_eval(tokens):
+    def eval_atom(token):
+        print(f"Eval {token}")
+        token_type = token[0]
+        token_value = token[1]
+        if token_type == TokenTypes.IDENT:
+            if token_value in labels:
+                return labels[token_value]
+            elif token_value in macros:
+                return recursive_eval(tokenize_expr(macros[token_value]))
+            else:
+                raise ValueError(f"Unknown label: {token_value}")
+        if token_type == TokenTypes.NUMBER:
+            try:
+                if token_value.startswith('0x'):
+                    return int(token_value, 16)
+                if token_value.startswith('0b'):
+                    return int(token_value, 2)
+                return int(token_value, 10)
+            except:
+                raise ValueError(f"Invalid value: {token_value}")
+        # if token_value.startswith("'") and token_value.endswith("'"):
+        #     return ord(token_value)
+        raise ValueError(f"Invalid value: {token_value}")
+    print('evaluating:', tokens)
+    if len(tokens) == 1:
+        return eval_atom(tokens[0])
+    
+    lowest_priority = -1
+    lowest_i = -1
+    lowest_op_parenthesis = 999
+    min_parenthesis = 999
+    values_count = 0
+
+    current_parenthesis = 0
+
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+            # print('token:', token[1])
+        if token[1] == '(':
+            current_parenthesis += 1
+        elif token[1] == ')':
+            current_parenthesis -= 1           
+            if current_parenthesis < 0:
+                raise ValueError("Mismatched right parenthesis!")
+        else:
+            if current_parenthesis < min_parenthesis:
+                min_parenthesis = current_parenthesis
+            if token[0] == TokenTypes.OP:
+                if token[1] in OPERATOR_PRIORITIES and (current_parenthesis < lowest_op_parenthesis or current_parenthesis == lowest_op_parenthesis and OPERATOR_PRIORITIES[token[1]] > lowest_priority or OPERATOR_PRIORITIES[token[1]] == lowest_priority and current_parenthesis == lowest_op_parenthesis and i > lowest_i):
+                    lowest_priority = OPERATOR_PRIORITIES[token[1]]
+                    lowest_i = i
+                    lowest_op_parenthesis = current_parenthesis
+            else:
+                values_count += 1
+        i += 1
+    if current_parenthesis > 0:
+        raise ValueError("Mismatched left parenthesis!")
+    if min_parenthesis > 0 and min_parenthesis < 999:
+        for i in range(min_parenthesis):
+            # print('whole expression is in parenthesis')
+            tokens = tokens[1:-1]
+            if lowest_i > 0:
+                lowest_i -= 1
+    if lowest_i == -1:
+        # print('no operators!')
+        if values_count == 1:
+            return eval_atom(tokens[0])
+        else:
+            raise ValueError('No operators found')
+    
+    first_half = tokens[:lowest_i]
+    second_half = tokens[lowest_i + 1:]
+    operator = tokens[lowest_i][1]
+    print('first half:', first_half)
+    print('second half:', second_half)
+    print('operator:', operator)
+    if first_half and second_half:
+        first_half_eval = recursive_eval(first_half)
+        second_half_eval = recursive_eval(second_half)
+        print('now evaluating:', first_half_eval, operator, second_half_eval)
+
+        if operator == '+':
+            return first_half_eval + second_half_eval
+        if operator == '-':
+            return first_half_eval - second_half_eval
+        if operator == '*':
+            return first_half_eval * second_half_eval
+        if operator == '/':
+            return first_half_eval // second_half_eval
+        else: 
+            raise ValueError(f"Operator not implemented: {operator}")
+    elif second_half:
+        if operator in UNARY_OPERATORS:
+            print('unary operator')
+            second_half_eval = recursive_eval(second_half)
+            if operator == '!':
+                return 0 if second_half_eval else 1
+            if operator == '-':
+                return -second_half_eval
+            if operator == '+':
+                return second_half_eval
+            else: 
+                raise ValueError(f"Operator not implemented: {operator}")
+        else:
+            raise ValueError('Mismatched operator!')
+        
 labels = {}
 macros = {}
 
-def parse_imm(value: str):
-    # print(f"Parsing {value}")
-    if value in labels:
-        return labels[value]
-    if value.startswith('0x'):
-        return int(value, 16)
-    if value.startswith('0b'):
-        return int(value, 2)
-    if value.startswith("'") and value.endswith("'"):
-        return ord(value)
-    try:
-        return int(value, 10)
-    except:
-        raise ValueError("Invalid value!")
-        
 def main():
     parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
 
@@ -220,9 +389,9 @@ def main():
             else:
                 raise ValueError(f"Unknown instruction: {instruction}")
                 break
-    print(labels)
-    print(macros)
-
+    if args.verbose:
+        print("Labels: ", labels)
+        print("Macros: ", macros)
 
     # actual assebmling
     cur_address = 0
@@ -232,20 +401,23 @@ def main():
         line = line.strip()
         if line.startswith(';'): # comment
             continue
-        tokens = line.split()                
-        if not tokens:  # empty line
+        # if line.startswith('.'): # preprocessor instruction
+        #     continue
+        parts = line.split(';')[0].split(None, 1)                
+        if not parts:  # empty line
             continue
-        new_tokens = []
-        for token in tokens:
-            if token in macros:
-                new_tokens.append(macros[token])
-            else:
-                new_tokens.append(token)
-        tokens = new_tokens  
 
-        instruction, *instr_args = tokens
+        instruction = parts[0]
+        instr_args = []
+        if len(parts) > 1:
+            for token in parts[1].split(','):
+                token = token.strip()
+                if token == ';':
+                    break
+                else:
+                    instr_args.append(token)
+
         instruction = instruction.upper()
-
         if instruction in opcode_table:
             opcode = opcode_table[instruction]
             instruction_bits.append(opcode['opcode'])
@@ -254,25 +426,26 @@ def main():
                     if args.verbose: 
                         print(f"{hex(cur_address)}: {hex(opcode['opcode'])}")
                 case EncodingFormat.FORMAT_REG:
-                    reg_byte = parse_imm(instr_args[0]) << 4
+                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4
                     instruction_bits.append(reg_byte)
                     if args.verbose: 
                         print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {reg_byte}")
                 case EncodingFormat.FORMAT_REG_REG:
-                    reg_byte = parse_imm(instr_args[0]) << 4 | parse_imm(instr_args[1])
+                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4 | recursive_eval(tokenize_expr(instr_args[1]))
                     instruction_bits.append(reg_byte)
                     if args.verbose: 
                         print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {reg_byte}")
                 case EncodingFormat.FORMAT_IMM:
-                    value = parse_imm(instr_args[0])
+                    print(instr_args[0])
+                    value = recursive_eval(tokenize_expr(instr_args[0]))
                     instruction_bits.append(value & LOWER_BYTE)
                     instruction_bits.append((value & HIGHER_BYTE) >> 8)
                     if args.verbose: 
                         print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {value & LOWER_BYTE} {(value & HIGHER_BYTE) >> 8}")
                 case EncodingFormat.FORMAT_REG_IMM:
-                    reg_byte = parse_imm(instr_args[0]) << 4
+                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4
                     instruction_bits.append(reg_byte)
-                    value = parse_imm(instr_args[1])
+                    value = recursive_eval(tokenize_expr(instr_args[1]))
                     instruction_bits.append(value & LOWER_BYTE)
                     instruction_bits.append((value & HIGHER_BYTE) >> 8)
                     if args.verbose: 
@@ -285,7 +458,7 @@ def main():
             match instruction:
                 case '.DB':
                     for arg in instr_args:
-                        byte = parse_imm(arg)
+                        byte = recursive_eval(tokenize_expr(arg))
                         if args.verbose: 
                             print(f"{hex(cur_address)}: {byte}")
                         instruction_bits.append(byte)
@@ -299,9 +472,6 @@ def main():
                             print(f"{hex(cur_address)}: {byte}")
                         instruction_bits.append(byte)
                         cur_address += 1
-
-
-            
 
     output_path = args.output or args.input_file + '.bin'
     with open(output_path, 'wb') as file:
