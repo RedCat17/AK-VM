@@ -163,7 +163,7 @@ typedef struct {
 void init_cpu(CPU *cpu) {
     memset(cpu->registers, 0, sizeof(cpu->registers));
     cpu->pc = 0; 
-    cpu->sp = STACK_ADDRESS;
+    cpu->sp = MEMORY_SIZE - 1;
     cpu->flags = 0;
 }
 
@@ -333,27 +333,29 @@ int exec_loadb(VM *vm, uint8_t reg, uint16_t address) {
 }
 
 int exec_push(VM *vm, uint16_t value) {
-    if (vm->cpu.sp > STACK_ADDRESS) {
-        fprintf(stderr, "Stack underflow!\n");
+    if (vm->cpu.sp - 2 < STACK_ADDRESS) {
+        fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
-    vm->memory[vm->cpu.sp--] = value & 0x00FF;
-    vm->memory[vm->cpu.sp--] = (value & 0xFF00) >> 8;
+    vm->memory[vm->cpu.sp] = value & 0x00FF;
+    vm->memory[vm->cpu.sp - 1] = (value >> 8);
+    vm->cpu.sp -= 2;
     return 0;
 }
 
 int exec_pop(VM *vm, uint8_t reg) {
-    if (vm->cpu.sp > STACK_ADDRESS) {
+    if (vm->cpu.sp > MEMORY_SIZE - 1) {
         fprintf(stderr, "Stack underflow!\n");
         return -1;
     }
-    vm->cpu.registers[reg] = vm->memory[++vm->cpu.sp] | (vm->memory[++vm->cpu.sp] << 8) ;
+    vm->cpu.sp += 2;
+    vm->cpu.registers[reg] = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp - 1] << 8) ;
     return 0;
 }
 
 int exec_call(VM *vm, uint16_t address) {
-    if (vm->cpu.sp > STACK_ADDRESS) {
-        fprintf(stderr, "Stack underflow!\n");
+    if (vm->cpu.sp < STACK_ADDRESS) {
+        fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
     vm->memory[vm->cpu.sp--] = vm->cpu.pc & 0x00FF;
@@ -363,7 +365,7 @@ int exec_call(VM *vm, uint16_t address) {
 }
 
 int exec_ret(VM *vm) {
-    if (vm->cpu.sp > STACK_ADDRESS) {
+    if (vm->cpu.sp > MEMORY_SIZE - 1) {
         fprintf(stderr, "Stack underflow!\n");
         return -1;
     }
