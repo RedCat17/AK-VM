@@ -1,5 +1,5 @@
 ; This program should test == and != operators.
-; Expected output: 101
+; Expected output: 10110
 
 .DEF OUT_ADDRESS 0xF801
 
@@ -14,6 +14,14 @@ ADDRI 0, 48
 STORBDR 0, OUT_ADDRESS 
 
 MOVRI 0, A != 3
+ADDRI 0, 48
+STORBDR 0, OUT_ADDRESS 
+
+MOVRI 0, A > 3
+ADDRI 0, 48
+STORBDR 0, OUT_ADDRESS 
+
+MOVRI 0, A > 5
 ADDRI 0, 48
 STORBDR 0, OUT_ADDRESS 
 
