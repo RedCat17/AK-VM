@@ -3,6 +3,11 @@ AK-VM-1 is virtual machine written in C that simulates a fantasy 16-bit CPU with
 ALL CODE IS ENTIRELY HUMAN-WRITTEN (NO AI).
 
 ### Usage:
+Compilation:
+```
+clang akvm.c -o akvm -Wall -Wextra -O3
+```
+
 Assembling program.asm into output.bin binary:
 ```
 python assembler.py program.asm -o output.bin

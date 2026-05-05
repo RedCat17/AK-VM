@@ -70,6 +70,16 @@ OPCODE_NOTR    = 0x36
 OPCODE_SHRR    = 0x37
 OPCODE_SHLR    = 0x38
 
+# SP and BP ops
+OPCODE_MOVSPR  = 0x40
+OPCODE_MOVRSP  = 0x41
+OPCODE_ADDSPI  = 0x42
+OPCODE_SUBSPI  = 0x43
+OPCODE_MOVBPR  = 0x44
+OPCODE_MOVRBP  = 0x45
+OPCODE_ADDBPI  = 0x46
+OPCODE_SUBBPI  = 0x47
+
 opcode_table = {
     # Control flow
     'NOP': {'opcode': OPCODE_NOP,       
@@ -166,6 +176,24 @@ opcode_table = {
              'format': EncodingFormat.FORMAT_REG},
     'SHLR': {'opcode': OPCODE_SHLR,     
              'format': EncodingFormat.FORMAT_REG},
+
+    # SP and BP ops
+    'MOVSPR': {'opcode': OPCODE_MOVSPR,   
+            'format': EncodingFormat.FORMAT_REG},
+    'MOVRSP': {'opcode': OPCODE_MOVRSP,   
+            'format': EncodingFormat.FORMAT_REG},
+    'ADDSPI': {'opcode': OPCODE_ADDSPI,   
+            'format': EncodingFormat.FORMAT_IMM},
+    'SUBSPI': {'opcode': OPCODE_SUBSPI,   
+            'format': EncodingFormat.FORMAT_IMM},
+    'MOVBPR': {'opcode': OPCODE_MOVBPR,   
+            'format': EncodingFormat.FORMAT_REG},
+    'MOVRBP': {'opcode': OPCODE_MOVRBP,   
+            'format': EncodingFormat.FORMAT_REG},
+    'ADDBPI': {'opcode': OPCODE_ADDBPI,   
+            'format': EncodingFormat.FORMAT_IMM},
+    'SUBBPI': {'opcode': OPCODE_SUBBPI,   
+            'format': EncodingFormat.FORMAT_IMM},
 }
 
 class TokenTypes:

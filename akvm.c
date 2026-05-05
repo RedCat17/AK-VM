@@ -78,6 +78,16 @@
 #define OPCODE_SHRR    0x37
 #define OPCODE_SHLR    0x38
 
+// SP and BP ops
+#define OPCODE_MOVSPR  0x40
+#define OPCODE_MOVRSP  0x41
+#define OPCODE_ADDSPI  0x42
+#define OPCODE_SUBSPI  0x43
+#define OPCODE_MOVBPR  0x44
+#define OPCODE_MOVRBP  0x45
+#define OPCODE_ADDBPI  0x46
+#define OPCODE_SUBBPI  0x47
+
 // Encoding formats enum
 typedef enum {
     FORMAT_NONE,
@@ -144,12 +154,22 @@ OpcodeData opcode_table[256] = {
     [OPCODE_NOTR]   = {"NOTR",   FORMAT_REG},
     [OPCODE_SHRR]   = {"SHRR",   FORMAT_REG},
     [OPCODE_SHLR]   = {"SHLR",   FORMAT_REG},
+
+    // SP and BP ops
+    [OPCODE_MOVSPR]  = {"MOVSPR",  FORMAT_REG},
+    [OPCODE_MOVRSP]  = {"MOVRSP",  FORMAT_REG},
+    [OPCODE_ADDSPI]  = {"ADDSPI",  FORMAT_IMM},
+    [OPCODE_SUBSPI]  = {"SUBSPI",  FORMAT_IMM},
+    [OPCODE_MOVBPR]  = {"MOVBPR",  FORMAT_REG},
+    [OPCODE_MOVRBP]  = {"MOVRBP",  FORMAT_REG},
+    [OPCODE_ADDBPI]  = {"ADDBPI",  FORMAT_IMM},
+    [OPCODE_SUBBPI]  = {"SUBBPI",  FORMAT_IMM},
 };
 
-// CPU struct stores CPU internal data: registers, PC, SP and flags
+// CPU struct stores CPU internal data: registers, PC, SP, BP and flags
 typedef struct {
     uint16_t registers[REG_COUNT];
-    uint16_t pc, sp;
+    uint16_t pc, sp, bp;
     uint8_t flags;
 } CPU;
 
@@ -163,7 +183,8 @@ typedef struct {
 void init_cpu(CPU *cpu) {
     memset(cpu->registers, 0, sizeof(cpu->registers));
     cpu->pc = 0; 
-    cpu->sp = MEMORY_SIZE - 1;
+    cpu->sp = MEMORY_SIZE - 2;
+    cpu->bp = MEMORY_SIZE - 2;
     cpu->flags = 0;
 }
 
@@ -194,7 +215,7 @@ int exec_load_program(VM *vm, const char *filename) {
 
 // dump CPU state to console
 void dump_cpu(CPU *cpu) {
-    fprintf(stderr, "PC: %X; SP: %X; Flags: %d;\n", cpu->pc, cpu->sp, cpu->flags);
+    fprintf(stderr, "PC: %X; SP: %X; BP: %X; Flags: %b;\n", cpu->pc, cpu->sp, cpu->bp, cpu->flags);
     fprintf(stderr, "Registers: ");
     for (uint8_t i = 0; i < REG_COUNT; i++) {
         fprintf(stderr, "%d ", cpu->registers[i]);
@@ -210,9 +231,13 @@ void dump_vm(VM *vm) {
         fprintf(stderr, "%d ", vm->memory[i]);
     }
     fprintf(stderr, "\nRAM: ");
-    for (int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 256; i++) {
         fprintf(stderr, "%d ", vm->memory[HEAP_ADDRESS + i]);
     }    
+    fprintf(stderr, "\nStack (top 64 bytes): ");
+    for (int i = MEMORY_SIZE - 1; i > MEMORY_SIZE - 64; i--) {
+        fprintf(stderr, "%X: %d, ", i, vm->memory[i]);
+    }
     fprintf(stderr, "\n");
 }
 
@@ -338,13 +363,13 @@ int exec_push(VM *vm, uint16_t value) {
         return -1;
     }
     vm->memory[vm->cpu.sp] = value & 0x00FF;
-    vm->memory[vm->cpu.sp - 1] = (value >> 8);
+    vm->memory[vm->cpu.sp + 1] = (value >> 8);
     vm->cpu.sp -= 2;
     return 0;
 }
 
 int exec_pop(VM *vm, uint8_t reg) {
-    if (vm->cpu.sp > MEMORY_SIZE - 1) {
+    if (vm->cpu.sp > MEMORY_SIZE - 2) {
         fprintf(stderr, "Stack underflow!\n");
         return -1;
     }
@@ -354,7 +379,7 @@ int exec_pop(VM *vm, uint8_t reg) {
 }
 
 int exec_call(VM *vm, uint16_t address) {
-    if (vm->cpu.sp < STACK_ADDRESS) {
+    if (vm->cpu.sp - 2  < STACK_ADDRESS) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
@@ -366,7 +391,7 @@ int exec_call(VM *vm, uint16_t address) {
 }
 
 int exec_ret(VM *vm) {
-    if (vm->cpu.sp > MEMORY_SIZE - 1) {
+    if (vm->cpu.sp > MEMORY_SIZE - 2) {
         fprintf(stderr, "Stack underflow!\n");
         return -1;
     }
@@ -609,6 +634,40 @@ void run_vm(VM *vm) {
                 vm->cpu.registers[reg1] <<= 1;
                 break;
 
+            // SP and BP ops
+            case OPCODE_MOVSPR: 
+                fprintf(stderr, "MOV SP <- reg %d\n", reg1);
+                vm->cpu.sp = vm->cpu.registers[reg1];
+                break;
+            case OPCODE_MOVRSP: 
+                fprintf(stderr, "MOV reg %d <- SP\n", reg1);
+                vm->cpu.registers[reg1] = vm->cpu.sp;
+                break;
+            case OPCODE_ADDSPI: 
+                fprintf(stderr, "ADD SP <- imm %d\n", value);
+                vm->cpu.sp = vm->cpu.sp + value;
+                break;
+            case OPCODE_SUBSPI: 
+                fprintf(stderr, "SUB SP <- imm %d\n", value);
+                vm->cpu.sp = vm->cpu.sp - value;
+                break;
+            case OPCODE_MOVBPR: 
+                fprintf(stderr, "MOV BP <- reg %d\n", reg1);
+                vm->cpu.bp = vm->cpu.registers[reg1];
+                break;
+            case OPCODE_MOVRBP: 
+                fprintf(stderr, "MOV reg %d <- BP\n", reg1);
+                vm->cpu.registers[reg1] = vm->cpu.bp;
+                break;
+            case OPCODE_ADDBPI: 
+                fprintf(stderr, "ADD BP <- imm %d\n", value);
+                vm->cpu.bp = vm->cpu.bp + value;
+                break;
+            case OPCODE_SUBBPI: 
+                fprintf(stderr, "SUB BP <- imm %d\n", value);
+                vm->cpu.bp = vm->cpu.bp - value;
+                break;
+
             default:
                 fprintf(stderr, "UNKNOWN OPCODE: %X! Halting.\n", opcode);
                 return;
@@ -618,7 +677,8 @@ void run_vm(VM *vm) {
             fprintf(stderr, "PC is outside program space! Halting.\n");
             return;
         }
-        dump_cpu(&vm->cpu);
+        // dump_cpu(&vm->cpu);
+        dump_vm(vm);
     }
 }
 
