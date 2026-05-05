@@ -358,8 +358,9 @@ int exec_call(VM *vm, uint16_t address) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
-    vm->memory[vm->cpu.sp--] = vm->cpu.pc & 0x00FF;
-    vm->memory[vm->cpu.sp--] = (vm->cpu.pc & 0xFF00) >> 8;
+    vm->memory[vm->cpu.sp] = vm->cpu.pc & 0x00FF;
+    vm->memory[vm->cpu.sp - 1] = (vm->cpu.pc >> 8);
+    vm->cpu.sp -= 2;
     vm->cpu.pc = address;
     return 0;
 }
@@ -369,7 +370,8 @@ int exec_ret(VM *vm) {
         fprintf(stderr, "Stack underflow!\n");
         return -1;
     }
-    vm->cpu.pc = vm->memory[++vm->cpu.sp] | (vm->memory[++vm->cpu.sp] << 8) ;
+    vm->cpu.sp += 2;
+    vm->cpu.pc = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp - 1] << 8) ;
     return 0;
 }
 
