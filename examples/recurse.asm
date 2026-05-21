@@ -1,4 +1,4 @@
-; This program tests functions, SP and BP. Arguments are passed via stack and references via BP offsets.
+; This program tests functions, SP and BP. Arguments are passed via stack and referenced via BP offsets.
 
 .DEF OUT_ADDRESS 0xF801
 .DEF ASCII_0 48

@@ -2,7 +2,7 @@
 ; It tests memory, I/O, loops, labels
 JMP start
 msg:
-.STR Hello world!
+.STR "Hello world!"
 
 start:
 MOVRI 0, msg ; load msg address to reg 0

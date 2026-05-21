@@ -227,6 +227,20 @@ OPERATOR_PRIORITIES = { # higher = lower priority
 
 UNARY_OPERATORS = ['!', '-', '+']
 
+class RecordTypes:
+    INSTRUCTION = 0
+    DATA_BYTES = 1
+    DATA_STRING = 2
+    DIRECTIVE = 3
+
+class Record:
+    def __init__(self, type, address, size, payload):
+        self.address = address
+        self.payload = payload
+        self.size = size
+        self.type = type
+        self.encoded_bytes = bytearray()
+
 def verify_ident(value: str):
     if value[0].isnumeric():
         raise ValueError(f'Ident cant begin with number: {value}')
@@ -280,7 +294,7 @@ def tokenize_expr(string: str):
 
 def recursive_eval(tokens):
     def eval_atom(token):
-        print(f"Eval {token}")
+        # print(f"Eval {token}")
         token_type = token[0]
         token_value = token[1]
         if token_type == TokenTypes.IDENT:
@@ -302,7 +316,7 @@ def recursive_eval(tokens):
         # if token_value.startswith("'") and token_value.endswith("'"):
         #     return ord(token_value)
         raise ValueError(f"Invalid value: {token_value}")
-    print('evaluating:', tokens)
+    # print('evaluating:', tokens)
     if len(tokens) == 1:
         return eval_atom(tokens[0])
     
@@ -353,13 +367,13 @@ def recursive_eval(tokens):
     first_half = tokens[:lowest_i]
     second_half = tokens[lowest_i + 1:]
     operator = tokens[lowest_i][1]
-    print('first half:', first_half)
-    print('second half:', second_half)
-    print('operator:', operator)
+    # print('first half:', first_half)
+    # print('second half:', second_half)
+    # print('operator:', operator)
     if first_half and second_half:
         first_half_eval = recursive_eval(first_half)
         second_half_eval = recursive_eval(second_half)
-        print('now evaluating:', first_half_eval, operator, second_half_eval)
+        # print('now evaluating:', first_half_eval, operator, second_half_eval)
 
         if operator == '+':
             return first_half_eval + second_half_eval
@@ -385,7 +399,7 @@ def recursive_eval(tokens):
             raise ValueError(f"Operator not implemented: {operator}")
     elif second_half:
         if operator in UNARY_OPERATORS:
-            print('unary operator')
+            # print('unary operator')
             second_half_eval = recursive_eval(second_half)
             if operator == '!':
                 return 0 if second_half_eval else 1
@@ -397,11 +411,110 @@ def recursive_eval(tokens):
                 raise ValueError(f"Operator not implemented: {operator}")
         else:
             raise ValueError('Mismatched operator!')
-        
+
+def encode_instruction(record, verbose=False):
+    opcode_info = opcode_table[record.payload['mnemonic']]
+    opcode = opcode_info['opcode']
+    format = opcode_info['format']
+
+    operands = record.payload['operands']
+
+    record.encoded_bytes.append(opcode)
+    match format:
+        case EncodingFormat.FORMAT_NONE:
+            # if verbose: 
+            #     print("".ljust(10), end='')
+            #     print(f"{record.payload['mnemonic']}")
+            pass
+        case EncodingFormat.FORMAT_REG:
+            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
+            record.encoded_bytes.append(reg_byte)
+            # if verbose: 
+            #     print(f"{reg_byte:02X}".ljust(10), end='')
+            #     print(f"{record.payload['mnemonic']} {operands[0]}")
+        case EncodingFormat.FORMAT_REG_REG:
+            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4 | recursive_eval(tokenize_expr(operands[1]))
+            record.encoded_bytes.append(reg_byte)
+            # if verbose: 
+            #     print(f"{reg_byte:02X}".ljust(10), end='')
+            #     print(f"{record.payload['mnemonic']} {operands[0]} {operands[1]}")
+        case EncodingFormat.FORMAT_IMM:
+            value = recursive_eval(tokenize_expr(operands[0]))
+            lower = value & LOWER_BYTE
+            higher = (value & HIGHER_BYTE) >> 8
+            record.encoded_bytes.append(lower)
+            record.encoded_bytes.append(higher)
+            # if verbose: 
+            #     print(f"{lower:02X} {higher:02X}".ljust(10), end='')
+            #     print(f"{record.payload['mnemonic']} {operands[0]}")
+        case EncodingFormat.FORMAT_REG_IMM:
+            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
+            record.encoded_bytes.append(reg_byte)
+
+            value = recursive_eval(tokenize_expr(operands[1]))
+            lower = value & LOWER_BYTE
+            higher = (value & HIGHER_BYTE) >> 8
+            record.encoded_bytes.append(lower)
+            record.encoded_bytes.append(higher)
+            # if verbose: 
+            #     print(f"{reg_byte:02X} {lower:02X} {higher:02X}".ljust(10), end='')
+            #     print(f"{record.payload['mnemonic']} {operands[0]} {operands[1]}")
+        case _:
+            raise ValueError("Unknown encoding format!")
+
+def encode_data_bytes(record, verbose=False):
+    values = record.payload['values']
+    
+    for value_expr in values:
+        value = recursive_eval(tokenize_expr(value_expr))
+        byte = value & 0xFF
+        record.encoded_bytes.append(byte)
+
+def encode_data_string(record, verbose=False):
+    string = record.payload['string']
+
+    for ch in string:
+        record.encoded_bytes.append(ord(ch))  
+
+def generate_listing(records):
+    lines = []
+
+    for record in records:
+        addr_col = f"{(record.address):05X}"
+        hex_bytes = ' '.join(f"{b:02X}" for b in record.encoded_bytes)
+        hex_col = f"{hex_bytes}".ljust(45)
+            
+        match record.type:
+            case RecordTypes.INSTRUCTION:       
+                mnemonic = record.payload['mnemonic']
+                operands = ' '.join(record.payload['operands'])
+                text_col = f"{mnemonic} {operands}"
+                pass
+            case RecordTypes.DATA_BYTES:   
+                values = record.payload['values']
+                text_col = ' '.join(values)
+            case RecordTypes.DATA_STRING:   
+                text_col = record.payload['string']
+            case RecordTypes.DIRECTIVE:
+                raise NotImplementedError("Directives are not implemented yet!")
+        lines.append(f"{addr_col}: {hex_col} {text_col}")
+    
+    return '\n'.join(lines)
+
+def generate_binary(records):
+    output = bytearray()
+    for record in records:
+        for byte in record.encoded_bytes:
+            output.append(byte)
+
 labels = {}
 macros = {}
+extern = {}
+
+records = []
 
 def main():
+    # Console argument parsing
     parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
 
     parser.add_argument("input_file", help="Path to input source file")
@@ -410,115 +523,111 @@ def main():
 
     args = parser.parse_args()
 
+    # File reading and splitting into lines
     with open(args.input_file, 'r') as file:
         lines = [line.strip() for line in file.readlines() if (line.strip() and not line.startswith(';'))]
 
-    # label collecting
+    # First pass:
+    # 1. produce symbol tables
+    # 2. produce instruction/data records list with addresses and sizes
     cur_address = 0
     for line in lines:
+        # if label
         if line.endswith(':'):
             labels[line[:-1]] = cur_address
+        # if instruction or data
         else:
-            instruction, *instr_args = line.split()
+            raw = line.split(';')[0].strip() # remove comments
+            instruction, *rest = raw.split(None, 1)
+            # if instruction
             if instruction in opcode_table:
+                operands = []
+                if rest:
+                    operands = [op.strip() for op in rest[0].split(',')]
+                # print(tokenize_expr(operands))
                 opcode = opcode_table[instruction]
-                cur_address += FORMAT_LENGTHS[opcode['format']]
+                size = FORMAT_LENGTHS[opcode['format']]
+                records.append(Record(
+                    RecordTypes.INSTRUCTION, 
+                    cur_address, 
+                    size, 
+                    {
+                        "mnemonic": instruction,
+                        "operands": operands
+                    }))
+                cur_address += size
+            # if data
             elif instruction == '.DB':
-                cur_address += len(instr_args)
+                values = [v.strip() for v in rest[0].split(',')]
+                size = len(values)
+                records.append(Record(
+                    RecordTypes.DATA_BYTES, 
+                    cur_address, 
+                    size, 
+                    {
+                        "bytes": values
+                    }))
+                cur_address += size
             elif instruction == '.STR':
-                cur_address += len(' '.join(instr_args).strip('"'))
+                string = rest[0].strip('"')
+                size = len(string)
+                records.append(Record(
+                    RecordTypes.DATA_STRING, 
+                    cur_address, 
+                    size, 
+                    {
+                        "string": string
+                    }))
+                cur_address += size
             elif instruction == '.DEF':
-                macros[instr_args[0]] = ' '.join(instr_args[1:])
+                parts = rest[0].split(None, 1)
+                name = parts[0]
+                value = parts[1]
+                macros[name] = value
             else:
                 raise ValueError(f"Unknown instruction: {instruction}")
                 break
+    
+    # Verbose outout
     if args.verbose:
         print("Labels: ", labels)
         print("Macros: ", macros)
+        print("Records:")
+        for record in records:
+            print(f"{record.address}: type={record.type} size={record.size}, payload={record.payload}")
 
-    # actual assebmling
-    cur_address = 0
-    instruction_bits = bytearray([])
-    for line in lines:
-        print(line)
-        line = line.strip()
-        if line.startswith(';'): # comment
-            continue
-        # if line.startswith('.'): # preprocessor instruction
-        #     continue
-        parts = line.split(';')[0].split(None, 1)                
-        if not parts:  # empty line
-            continue
+    # Second pass:
+    # 1. resolve expressions and operands using labels & macros
+    # 2. encode instructions into bytes
+    # 3. produce enriched records
+    for record in records:
+        match record.type:
+            case RecordTypes.INSTRUCTION:                
+                encode_instruction(record, args.verbose)
+            case RecordTypes.DATA_BYTES:   
+                encode_data_bytes(record, args.verbose)
+            case RecordTypes.DATA_STRING:   
+                encode_data_string(record, args.verbose)
+            case RecordTypes.DIRECTIVE:
+                raise NotImplementedError("Directives are not implemented yet!")
 
-        instruction = parts[0]
-        instr_args = []
-        if len(parts) > 1:
-            for token in parts[1].split(','):
-                token = token.strip()
-                if token == ';':
-                    break
-                else:
-                    instr_args.append(token)
+    
+    # Show listing
+    if args.verbose:
+        print("\nListing:")   
+        print(generate_listing(records))
 
-        instruction = instruction.upper()
-        if instruction in opcode_table:
-            opcode = opcode_table[instruction]
-            instruction_bits.append(opcode['opcode'])
-            match opcode['format']:
-                case EncodingFormat.FORMAT_NONE:
-                    if args.verbose: 
-                        print(f"{hex(cur_address)}: {hex(opcode['opcode'])}")
-                case EncodingFormat.FORMAT_REG:
-                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4
-                    instruction_bits.append(reg_byte)
-                    if args.verbose: 
-                        print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {reg_byte}")
-                case EncodingFormat.FORMAT_REG_REG:
-                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4 | recursive_eval(tokenize_expr(instr_args[1]))
-                    instruction_bits.append(reg_byte)
-                    if args.verbose: 
-                        print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {reg_byte}")
-                case EncodingFormat.FORMAT_IMM:
-                    print(instr_args[0])
-                    value = recursive_eval(tokenize_expr(instr_args[0]))
-                    instruction_bits.append(value & LOWER_BYTE)
-                    instruction_bits.append((value & HIGHER_BYTE) >> 8)
-                    if args.verbose: 
-                        print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {value & LOWER_BYTE} {(value & HIGHER_BYTE) >> 8}")
-                case EncodingFormat.FORMAT_REG_IMM:
-                    reg_byte = recursive_eval(tokenize_expr(instr_args[0])) << 4
-                    instruction_bits.append(reg_byte)
-                    value = recursive_eval(tokenize_expr(instr_args[1]))
-                    instruction_bits.append(value & LOWER_BYTE)
-                    instruction_bits.append((value & HIGHER_BYTE) >> 8)
-                    if args.verbose: 
-                        print(f"{hex(cur_address)}: {hex(opcode['opcode'])} {reg_byte} {value & LOWER_BYTE} {(value & HIGHER_BYTE) >> 8}")
-                case _:
-                    raise ValueError("Unknown encoding format!")
-                    break
-            cur_address += FORMAT_LENGTHS[opcode['format']]
-        else: 
-            match instruction:
-                case '.DB':
-                    for arg in instr_args:
-                        byte = recursive_eval(tokenize_expr(arg))
-                        if args.verbose: 
-                            print(f"{hex(cur_address)}: {byte}")
-                        instruction_bits.append(byte)
-                        cur_address += 1
-                case '.STR':
-                    string = ' '.join(instr_args).strip('"')
-                    print(f"string: {string}")
-                    for char in string:
-                        byte = ord(char)
-                        if args.verbose: 
-                            print(f"{hex(cur_address)}: {byte}")
-                        instruction_bits.append(byte)
-                        cur_address += 1
+    # Encode binary
+    output = generate_binary(records)
 
     output_path = args.output or args.input_file + '.bin'
+    for byte in output:
+        print(f"{hex(byte)}", end=', ')
+
+    print(f"\n{len(output)} bytes total.")
+    
     with open(output_path, 'wb') as file:
-        file.write(instruction_bits)
+        file.write(output)
 
 if __name__ == '__main__':
     main()

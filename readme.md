@@ -5,7 +5,7 @@ ALL CODE IS ENTIRELY HUMAN-WRITTEN (NO AI).
 ### Usage:
 Compilation:
 ```
-clang akvm.c -o akvm -Wall -Wextra -O3
+clang akvm.c -o build/akvm -Wall -Wextra -O3
 ```
 
 Assembling program.asm into output.bin binary:

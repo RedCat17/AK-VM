@@ -9,7 +9,8 @@
 #define HEAP_ADDRESS     0x4000
 #define VRAM_ADDRESS     0xF000
 #define IO_ADDRESS       0xF800
-#define STACK_ADDRESS    0xF900
+#define STACK_BEGIN    0xFFFE
+#define STACK_END    0xF900
 
 #define RX_ADDRESS              0xF800 // Writing to this address prints to console
 #define TX_ADDRESS              0xF801 // Reading from here reads from console
@@ -183,8 +184,8 @@ typedef struct {
 void init_cpu(CPU *cpu) {
     memset(cpu->registers, 0, sizeof(cpu->registers));
     cpu->pc = 0; 
-    cpu->sp = MEMORY_SIZE - 2;
-    cpu->bp = MEMORY_SIZE - 2;
+    cpu->sp = STACK_BEGIN;
+    cpu->bp = STACK_BEGIN;
     cpu->flags = 0;
 }
 
@@ -303,7 +304,7 @@ int exec_stor(VM *vm, uint16_t address, uint16_t value) {
         fprintf(stderr, "Segfault! Can't write into program space.\n");
         return -1;
     }
-    if (address >= STACK_ADDRESS) {
+    if (address >= STACK_END) {
         fprintf(stderr, "Segfault! Can't write into stack.\n");
         return -1;
     }
@@ -335,7 +336,7 @@ int exec_storb(VM *vm, uint16_t address, uint8_t value) {
         fprintf(stderr, "Segfault! Can't write into program space.\n");
         return -1;
     }
-    if (address >= STACK_ADDRESS) {
+    if (address >= STACK_END) {
         fprintf(stderr, "Segfault! Can't write into stack.\n");
         return -1;
     }
@@ -358,7 +359,7 @@ int exec_loadb(VM *vm, uint8_t reg, uint16_t address) {
 }
 
 int exec_push(VM *vm, uint16_t value) {
-    if (vm->cpu.sp - 2 < STACK_ADDRESS) {
+    if (vm->cpu.sp - 2 < STACK_END) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
@@ -379,7 +380,7 @@ int exec_pop(VM *vm, uint8_t reg) {
 }
 
 int exec_call(VM *vm, uint16_t address) {
-    if (vm->cpu.sp - 2  < STACK_ADDRESS) {
+    if (vm->cpu.sp - 2  < STACK_END) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
