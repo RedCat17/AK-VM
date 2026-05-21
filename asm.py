@@ -422,43 +422,34 @@ def encode_instruction(record, verbose=False):
     record.encoded_bytes.append(opcode)
     match format:
         case EncodingFormat.FORMAT_NONE:
-            # if verbose: 
-            #     print("".ljust(10), end='')
-            #     print(f"{record.payload['mnemonic']}")
             pass
         case EncodingFormat.FORMAT_REG:
             reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
+            
             record.encoded_bytes.append(reg_byte)
-            # if verbose: 
-            #     print(f"{reg_byte:02X}".ljust(10), end='')
-            #     print(f"{record.payload['mnemonic']} {operands[0]}")
         case EncodingFormat.FORMAT_REG_REG:
             reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4 | recursive_eval(tokenize_expr(operands[1]))
+
             record.encoded_bytes.append(reg_byte)
-            # if verbose: 
-            #     print(f"{reg_byte:02X}".ljust(10), end='')
-            #     print(f"{record.payload['mnemonic']} {operands[0]} {operands[1]}")
         case EncodingFormat.FORMAT_IMM:
             value = recursive_eval(tokenize_expr(operands[0]))
+
             lower = value & LOWER_BYTE
             higher = (value & HIGHER_BYTE) >> 8
+
             record.encoded_bytes.append(lower)
             record.encoded_bytes.append(higher)
-            # if verbose: 
-            #     print(f"{lower:02X} {higher:02X}".ljust(10), end='')
-            #     print(f"{record.payload['mnemonic']} {operands[0]}")
         case EncodingFormat.FORMAT_REG_IMM:
             reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
             record.encoded_bytes.append(reg_byte)
 
             value = recursive_eval(tokenize_expr(operands[1]))
+
             lower = value & LOWER_BYTE
             higher = (value & HIGHER_BYTE) >> 8
+
             record.encoded_bytes.append(lower)
             record.encoded_bytes.append(higher)
-            # if verbose: 
-            #     print(f"{reg_byte:02X} {lower:02X} {higher:02X}".ljust(10), end='')
-            #     print(f"{record.payload['mnemonic']} {operands[0]} {operands[1]}")
         case _:
             raise ValueError("Unknown encoding format!")
 
