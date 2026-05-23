@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import dataclass
 
 class EncodingFormat:
     FORMAT_NONE = 0
@@ -233,6 +234,12 @@ class RecordTypes:
     DATA_STRING = 2
     DIRECTIVE = 3
 
+class ExprTypes:
+    ILLEGAL = 0
+    LOCAL = 1
+    EXTERN = 2
+    EXTERN_CONST = 3
+
 class Record:
     def __init__(self, type, address, size, payload):
         self.address = address
@@ -240,6 +247,35 @@ class Record:
         self.size = size
         self.type = type
         self.encoded_bytes = bytearray()
+        self.relocations = [] # format: ('symbol', offset)
+
+@dataclass
+class ObjectHeader:
+    name: str 
+    length: int
+
+@dataclass
+class ODefineRecord:
+    name: str
+    address: int
+
+@dataclass
+class OReferenceRecord:
+    name: str
+
+@dataclass
+class OTextRecord:
+    address: int 
+    data: bytearray
+
+@dataclass
+class OModificationRecord:
+    address: int
+    symbol: str
+
+@dataclass
+class OEndRecord:
+    entry_point: int
 
 def verify_ident(value: str):
     if value[0].isnumeric():
@@ -412,6 +448,27 @@ def recursive_eval(tokens):
         else:
             raise ValueError('Mismatched operator!')
 
+def check_expr(tokens):
+    local = True
+    for token in tokens:
+        if token[0] == TokenTypes.IDENT:
+            if token[1] in externs:
+                local = False
+                break
+    # local expression (no external symbols)
+    if local:
+        return ExprTypes.LOCAL
+    # single external symbol
+    if len(tokens) == 1:
+        return ExprTypes.EXTERN 
+    # symbol +- constant
+    if len(tokens) == 3:
+        if (tokens[0][0] == TokenTypes.IDENT & (tokens[0][1] in externs)) & \
+        (tokens[1][1] in ('+', '-')) & \
+        ((tokens[2][0] in (TokenTypes.IDENT, TokenTypes.NUMBER)) & (tokens[2][1] not in externs)):
+            return ExprTypes.EXTERN_CONST
+    return ExprTypes.ILLEGAL
+
 def encode_instruction(record, verbose=False):
     opcode_info = opcode_table[record.payload['mnemonic']]
     opcode = opcode_info['opcode']
@@ -424,32 +481,84 @@ def encode_instruction(record, verbose=False):
         case EncodingFormat.FORMAT_NONE:
             pass
         case EncodingFormat.FORMAT_REG:
-            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
-            
-            record.encoded_bytes.append(reg_byte)
+            tokens = tokenize_expr(operands[0])
+            match check_expr(tokens):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.LOCAL:
+                    reg_byte = recursive_eval(tokens) << 4
+                    record.encoded_bytes.append(reg_byte)
+                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
+                    raise ValueError("Can't use external for register name.")
+
         case EncodingFormat.FORMAT_REG_REG:
-            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4 | recursive_eval(tokenize_expr(operands[1]))
+            tokens1 = tokenize_expr(operands[0])
+            match check_expr(tokens1):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
+                    raise ValueError("Can't use external for register name.")
+            tokens2 = tokenize_expr(operands[1])
+            match check_expr(tokens2):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
+                    raise ValueError("Can't use external for register name.")
+
+            reg_byte = recursive_eval(tokens1) << 4 | recursive_eval(tokens2)
 
             record.encoded_bytes.append(reg_byte)
         case EncodingFormat.FORMAT_IMM:
-            value = recursive_eval(tokenize_expr(operands[0]))
+            tokens = tokenize_expr(operands[0])
+            match check_expr(tokens):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.LOCAL:
+                    value = recursive_eval(tokens)
 
-            lower = value & LOWER_BYTE
-            higher = (value & HIGHER_BYTE) >> 8
+                    lower = value & LOWER_BYTE
+                    higher = (value & HIGHER_BYTE) >> 8
 
-            record.encoded_bytes.append(lower)
-            record.encoded_bytes.append(higher)
+                    record.encoded_bytes.append(lower)
+                    record.encoded_bytes.append(higher)
+                case ExprTypes.EXTERN:
+                    print(f"relocations in: {tokens}")
+                    record.relocations.append((tokens[0][1], 0))
+                    record.encoded_bytes.append(0)
+                    record.encoded_bytes.append(0)
+                case ExprTypes.EXTERN_CONST:
+                    raise ValueError("Offset not yet implemented.")
+
         case EncodingFormat.FORMAT_REG_IMM:
-            reg_byte = recursive_eval(tokenize_expr(operands[0])) << 4
-            record.encoded_bytes.append(reg_byte)
+            tokens1 = tokenize_expr(operands[0])
+            match check_expr(tokens1):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
+                    raise ValueError("Can't use external for register name.")
+                case ExprTypes.LOCAL:
+                    reg_byte = recursive_eval(tokens1) << 4
+                    record.encoded_bytes.append(reg_byte)
+            
+            tokens2 = tokenize_expr(operands[1])
+            match check_expr(tokens2):
+                case ExprTypes.ILLEGAL:
+                    raise ValueError("Illegal expression.")
+                case ExprTypes.LOCAL:
+                    value = recursive_eval(tokens2)
 
-            value = recursive_eval(tokenize_expr(operands[1]))
+                    lower = value & LOWER_BYTE
+                    higher = (value & HIGHER_BYTE) >> 8
 
-            lower = value & LOWER_BYTE
-            higher = (value & HIGHER_BYTE) >> 8
-
-            record.encoded_bytes.append(lower)
-            record.encoded_bytes.append(higher)
+                    record.encoded_bytes.append(lower)
+                    record.encoded_bytes.append(higher)
+                case ExprTypes.EXTERN:
+                    print(f"relocations in: {tokens}")
+                    record.relocations.append((tokens[0][1], 0))
+                    record.encoded_bytes.append(0)
+                    record.encoded_bytes.append(0)
+                case ExprTypes.EXTERN_CONST:
+                    raise ValueError("Offset not yet implemented.")
         case _:
             raise ValueError("Unknown encoding format!")
 
@@ -497,10 +606,65 @@ def generate_binary(records):
     for record in records:
         for byte in record.encoded_bytes:
             output.append(byte)
+    return output
+
+def generate_object(records):
+    object = []
+
+    # H record
+    object.append(ObjectHeader("program", 999))
+
+    # D record
+    for symbol in exports:
+        if symbol in labels:
+            address = labels[symbol]
+            object.append(ODefineRecord(symbol, address))
+        else:
+            raise ValueError("Exported symbol is undefined!")
+    # R records
+    for symbol in externs:
+        object.append(OReferenceRecord(symbol))
+
+    # T records
+    # no text record limits yet
+    bytes = generate_binary(records)
+    object.append(OTextRecord(0, bytes))
+
+    # M records
+    for record in records:
+        if record.relocations:
+            reloc = record.relocations[0]
+            object.append(OModificationRecord(record.address + 1, reloc[0])) # address should be remade
+
+    # E record
+    object.append(OEndRecord(0))
+
+    return object
+
+def generate_object_listing(object):
+    lines = []
+    for record in object:
+        match record:
+            case ObjectHeader():
+                lines.append(f"H | {record.name:<10}")
+            case ODefineRecord():
+                lines.append(f"D | {record.name:<10} | {record.address}")
+            case OReferenceRecord():
+                lines.append(f"R | {record.name:<10}")
+            case OTextRecord():
+                hex_bytes = ' '.join(f"{b:02X}" for b in record.data)
+                lines.append(f"T | {record.address:<10} | {hex_bytes}")
+            case OModificationRecord():
+                lines.append(f"M | {record.address:<10} | {record.symbol}")
+            case OEndRecord():
+                lines.append(f"E | {record.entry_point:<10}")
+    listing = '\n'.join(lines)
+    return listing
 
 labels = {}
 macros = {}
-extern = {}
+externs = []
+exports = []
 
 records = []
 
@@ -575,6 +739,12 @@ def main():
                 name = parts[0]
                 value = parts[1]
                 macros[name] = value
+            elif instruction == '.EXTERN':
+                ident = rest[0]
+                externs.append(ident)
+            elif instruction == '.EXPORT':
+                ident = rest[0]
+                exports.append(ident)
             else:
                 raise ValueError(f"Unknown instruction: {instruction}")
                 break
@@ -583,6 +753,8 @@ def main():
     if args.verbose:
         print("Labels: ", labels)
         print("Macros: ", macros)
+        print("External: ", externs)
+        print("Exports: ", exports)
         print("Records:")
         for record in records:
             print(f"{record.address}: type={record.type} size={record.size}, payload={record.payload}")
@@ -602,6 +774,15 @@ def main():
             case RecordTypes.DIRECTIVE:
                 raise NotImplementedError("Directives are not implemented yet!")
 
+    # Verbose outout
+    if args.verbose:
+        print("\nEnriched records:")
+        for record in records:
+            string = f"{record.address}: type={record.type} size={record.size}, payload={record.payload}, bytes={record.encoded_bytes}"
+            if record.relocations:
+                string += f", relocations={record.relocations}"
+            print(string)
+
     
     # Show listing
     if args.verbose:
@@ -619,6 +800,12 @@ def main():
     
     with open(output_path, 'wb') as file:
         file.write(output)
+
+    object = generate_object(records)
+
+    if args.verbose:
+        print("\nObject listing:")   
+        print(generate_object_listing(object))
 
 if __name__ == '__main__':
     main()
