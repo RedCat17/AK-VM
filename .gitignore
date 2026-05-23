@@ -1,2 +1,3 @@
 *.txt
-.linker
+.linker/
+.legacy/
