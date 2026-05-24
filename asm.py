@@ -453,7 +453,7 @@ def encode_instruction(record, verbose=False):
                     record.encoded_bytes.append(higher)
                 case ExprTypes.EXTERN:
                     print(f"relocations in: {tokens}")
-                    record.relocations.append((tokens[0][1], 0))
+                    record.relocations.append((tokens2[0][1], 0))
                     record.encoded_bytes.append(0)
                     record.encoded_bytes.append(0)
                 case ExprTypes.EXTERN_CONST:
