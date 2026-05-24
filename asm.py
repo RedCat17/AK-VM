@@ -3,12 +3,19 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 @dataclass
+class OperandReg:
+    reg: int
+
+    def __str__(self):
+        return f"R{self.reg}"
+
+@dataclass
 class OperandImm:
     expr: list
 
-@dataclass
-class OperandReg:
-    reg: int
+    def __str__(self):
+        return ' '.join(t[1] for t in self.expr)
+
 
 # @dataclass
 # class OperandAddr:
@@ -212,13 +219,27 @@ def verify_number(value: str):
     elif not value.isdigit():
         raise ValueError(f'Invalid number: {value}')
 
-def verify_register(value: str):
+def is_register(value: str):
     if not value.startswith('R'):
-        raise ValueError(f'Invalid register name: {value}')
+        return False
     value = value[1:]
     if not value.isdigit():
-        raise ValueError(f'Invalid register name: {value}')
-    return int(value)
+        return False
+    return True
+
+def parse_register(value: str):
+    return int(value[1:])
+
+def parse_operand(string):
+    # indirect handling
+    # todo
+    # register handling
+    if is_register(string):
+        return OperandReg(parse_register(string))
+    # immediate handling
+    return OperandImm(tokenize_expr(string))
+        
+
 
 def tokenize_expr(string: str):
     def flush_token():
@@ -411,35 +432,19 @@ def encode_instruction(record, verbose=False):
         case EncodingFormat.NONE:
             pass
         case EncodingFormat.REG:
-            tokens = tokenize_expr(operands[0])
-            match check_expr(tokens):
-                case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
-                case ExprTypes.LOCAL:
-                    reg_byte = recursive_eval(tokens) << 4
-                    record.encoded_bytes.append(reg_byte)
-                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
-                    raise ValueError("Can't use external for register name.")
+            reg1 = operands[0].reg
+            reg_byte = reg1 << 4
+            record.encoded_bytes.append(reg_byte)
 
-        case EncodingFormat.REG_REG:
-            tokens1 = tokenize_expr(operands[0])
-            match check_expr(tokens1):
-                case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
-                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
-                    raise ValueError("Can't use external for register name.")
-            tokens2 = tokenize_expr(operands[1])
-            match check_expr(tokens2):
-                case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
-                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
-                    raise ValueError("Can't use external for register name.")
+        case EncodingFormat.REG_REG:            
+            reg1 = operands[0].reg
+            reg2 = operands[1].reg
 
-            reg_byte = recursive_eval(tokens1) << 4 | recursive_eval(tokens2)
+            reg_byte = reg1 << 4 | reg2
 
             record.encoded_bytes.append(reg_byte)
         case EncodingFormat.IMM:
-            tokens = tokenize_expr(operands[0])
+            tokens = operands[0].expr
             match check_expr(tokens):
                 case ExprTypes.ILLEGAL:
                     raise ValueError("Illegal expression.")
@@ -459,18 +464,12 @@ def encode_instruction(record, verbose=False):
                 case ExprTypes.EXTERN_CONST:
                     raise ValueError("Offset not yet implemented.")
 
-        case EncodingFormat.REG_IMM:
-            tokens1 = tokenize_expr(operands[0])
-            match check_expr(tokens1):
-                case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
-                case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
-                    raise ValueError("Can't use external for register name.")
-                case ExprTypes.LOCAL:
-                    reg_byte = recursive_eval(tokens1) << 4
-                    record.encoded_bytes.append(reg_byte)
+        case EncodingFormat.REG_IMM:            
+            reg1 = operands[0].reg
+            reg_byte = reg1 << 4
+            record.encoded_bytes.append(reg_byte)
             
-            tokens2 = tokenize_expr(operands[1])
+            tokens2 = operands[1].expr
             match check_expr(tokens2):
                 case ExprTypes.ILLEGAL:
                     raise ValueError("Illegal expression.")
@@ -517,7 +516,7 @@ def generate_listing(records):
         match record.type:
             case RecordTypes.INSTRUCTION:       
                 mnemonic = record.payload.mnemonic
-                operands = ' '.join(record.payload.operands)
+                operands = ', '.join(str(op) for op in record.payload.operands)
                 text_col = f"{mnemonic} {operands}"
                 pass
             case RecordTypes.DATA_BYTES:   
@@ -672,8 +671,8 @@ def main():
                     if instruction in instruction_table:
                         operands = []
                         if rest:
-                            operands = [op.strip() for op in rest[0].split(',')]
-                        # print(tokenize_expr(operands))
+                            operand_strings = [op.strip() for op in rest[0].split(',')]
+                            operands = [parse_operand(op) for op in operand_strings]
                         opcode = instruction_table[instruction]
                         size = FORMAT_LENGTHS[opcode.format]
                         records.append(Record(
