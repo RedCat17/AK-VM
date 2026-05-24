@@ -10,10 +10,10 @@ class OperandImm:
 class OperandReg:
     reg: int
 
-@dataclass
-class OperandAddr:
-    symbol: str
-    offset: int
+# @dataclass
+# class OperandAddr:
+#     symbol: str
+#     offset: int
 
 # class EncodingFormat(Enum):
 #     R = opcode | rd | rs1 | rs2 | funct
@@ -212,6 +212,14 @@ def verify_number(value: str):
     elif not value.isdigit():
         raise ValueError(f'Invalid number: {value}')
 
+def verify_register(value: str):
+    if not value.startswith('R'):
+        raise ValueError(f'Invalid register name: {value}')
+    value = value[1:]
+    if not value.isdigit():
+        raise ValueError(f'Invalid register name: {value}')
+    return int(value)
+
 def tokenize_expr(string: str):
     def flush_token():
         if i > last_i:
@@ -385,9 +393,9 @@ def check_expr(tokens):
         return ExprTypes.EXTERN 
     # symbol +- constant
     if len(tokens) == 3:
-        if (tokens[0][0] == TokenTypes.IDENT & (tokens[0][1] in externs)) & \
-        (tokens[1][1] in ('+', '-')) & \
-        ((tokens[2][0] in (TokenTypes.IDENT, TokenTypes.NUMBER)) & (tokens[2][1] not in externs)):
+        if (tokens[0][0] == TokenTypes.IDENT and (tokens[0][1] in externs)) and \
+        (tokens[1][1] in ('+', '-')) and \
+        ((tokens[2][0] in (TokenTypes.IDENT, TokenTypes.NUMBER)) and (tokens[2][1] not in externs)):
             return ExprTypes.EXTERN_CONST
     return ExprTypes.ILLEGAL
 
