@@ -675,6 +675,11 @@ def main():
     parser.add_argument("input_file", help="Path to input source file")
     parser.add_argument("-o", "--output", help="Path to assembled output file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument(
+        "-f", "--format", 
+        choices=["bin", "obj"],
+        help="Output format",
+        required=True)
 
     args = parser.parse_args()
 
@@ -694,60 +699,65 @@ def main():
         else:
             raw = line.split(';')[0].strip() # remove comments
             instruction, *rest = raw.split(None, 1)
-            # if instruction
-            if instruction in opcode_table:
-                operands = []
-                if rest:
-                    operands = [op.strip() for op in rest[0].split(',')]
-                # print(tokenize_expr(operands))
-                opcode = opcode_table[instruction]
-                size = FORMAT_LENGTHS[opcode['format']]
-                records.append(Record(
-                    RecordTypes.INSTRUCTION, 
-                    cur_address, 
-                    size, 
-                    {
-                        "mnemonic": instruction,
-                        "operands": operands
-                    }))
-                cur_address += size
-            # if data
-            elif instruction == '.DB':
-                values = [v.strip() for v in rest[0].split(',')]
-                size = len(values)
-                records.append(Record(
-                    RecordTypes.DATA_BYTES, 
-                    cur_address, 
-                    size, 
-                    {
-                        "bytes": values
-                    }))
-                cur_address += size
-            elif instruction == '.STR':
-                string = rest[0].strip('"')
-                size = len(string)
-                records.append(Record(
-                    RecordTypes.DATA_STRING, 
-                    cur_address, 
-                    size, 
-                    {
-                        "string": string
-                    }))
-                cur_address += size
-            elif instruction == '.DEF':
-                parts = rest[0].split(None, 1)
-                name = parts[0]
-                value = parts[1]
-                macros[name] = value
-            elif instruction == '.EXTERN':
-                ident = rest[0]
-                externs.append(ident)
-            elif instruction == '.EXPORT':
-                ident = rest[0]
-                exports.append(ident)
-            else:
-                raise ValueError(f"Unknown instruction: {instruction}")
-                break
+            match instruction:
+                # data
+                case '.DB':
+                    values = [v.strip() for v in rest[0].split(',')]
+                    size = len(values)
+                    records.append(Record(
+                        RecordTypes.DATA_BYTES, 
+                        cur_address, 
+                        size, 
+                        {
+                            "bytes": values
+                        }))
+                    cur_address += size
+                case '.STR':
+                    string = rest[0].strip('"')
+                    size = len(string)
+                    records.append(Record(
+                        RecordTypes.DATA_STRING, 
+                        cur_address, 
+                        size, 
+                        {
+                            "string": string
+                        }))
+                    cur_address += size
+                # constants
+                case '.DEF':
+                    parts = rest[0].split(None, 1)
+                    name = parts[0]
+                    value = parts[1]
+                    macros[name] = value
+                # external symbol 
+                case '.EXTERN':
+                    ident = rest[0]
+                    externs.append(ident)
+                # global symbol definition
+                case '.EXPORT':
+                    ident = rest[0]
+                    exports.append(ident)
+                case _:
+                    # if instruction
+                    if instruction in opcode_table:
+                        operands = []
+                        if rest:
+                            operands = [op.strip() for op in rest[0].split(',')]
+                        # print(tokenize_expr(operands))
+                        opcode = opcode_table[instruction]
+                        size = FORMAT_LENGTHS[opcode['format']]
+                        records.append(Record(
+                            RecordTypes.INSTRUCTION, 
+                            cur_address, 
+                            size, 
+                            {
+                                "mnemonic": instruction,
+                                "operands": operands
+                            }))
+                        cur_address += size                    
+                    else:
+                        raise ValueError(f"Unknown instruction: {instruction}")
+                        break
     
     # Verbose outout
     if args.verbose:
@@ -789,23 +799,26 @@ def main():
         print("\nListing:")   
         print(generate_listing(records))
 
-    # Encode binary
-    output = generate_binary(records)
+    match args.format:
+        case "bin":
+            # Encode binary
+            output = generate_binary(records)
 
-    output_path = args.output or args.input_file + '.bin'
-    for byte in output:
-        print(f"{hex(byte)}", end=', ')
+            output_path = args.output or args.input_file + '.bin'
+            for byte in output:
+                print(f"{hex(byte)}", end=', ')
 
-    print(f"\n{len(output)} bytes total.")
-    
-    with open(output_path, 'wb') as file:
-        file.write(output)
+            print(f"\n{len(output)} bytes total.")
+            
+            with open(output_path, 'wb') as file:
+                file.write(output)
+        case "obj":
+            # Generate object
+            object = generate_object(records)
 
-    object = generate_object(records)
-
-    if args.verbose:
-        print("\nObject listing:")   
-        print(generate_object_listing(object))
+            if args.verbose:
+                print("\nObject listing:")   
+                print(generate_object_listing(object))
 
 if __name__ == '__main__':
     main()
