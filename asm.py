@@ -1,19 +1,20 @@
 import argparse
 from dataclasses import dataclass
+from enum import Enum, auto
 
-class EncodingFormat:
-    FORMAT_NONE = 0
-    FORMAT_REG = 1
-    FORMAT_REG_REG = 2
-    FORMAT_IMM = 3
-    FORMAT_REG_IMM = 4
+class EncodingFormat(Enum):
+    NONE = auto()
+    REG = auto()
+    REG_REG = auto()
+    IMM = auto()
+    REG_IMM = auto()
 
 FORMAT_LENGTHS = {
-    EncodingFormat.FORMAT_NONE: 1,
-    EncodingFormat.FORMAT_REG: 2,
-    EncodingFormat.FORMAT_REG_REG: 2,
-    EncodingFormat.FORMAT_IMM: 3,
-    EncodingFormat.FORMAT_REG_IMM: 4
+    EncodingFormat.NONE: 1,
+    EncodingFormat.REG: 2,
+    EncodingFormat.REG_REG: 2,
+    EncodingFormat.IMM: 3,
+    EncodingFormat.REG_IMM: 4
 }
 
 LOWER_BYTE  = 0x00FF
@@ -84,117 +85,117 @@ OPCODE_SUBBPI  = 0x47
 opcode_table = {
     # Control flow
     'NOP': {'opcode': OPCODE_NOP,       
-            'format': EncodingFormat.FORMAT_NONE},
+            'format': EncodingFormat.NONE},
     'HLT': {'opcode': OPCODE_HLT,       
-            'format': EncodingFormat.FORMAT_NONE},
+            'format': EncodingFormat.NONE},
     'CMPRR': {'opcode': OPCODE_CMPRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'CMPRI': {'opcode': OPCODE_CMPRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'JMP': {'opcode': OPCODE_JMP,       
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'JMZ': {'opcode': OPCODE_JMZ,       
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'JNZ': {'opcode': OPCODE_JNZ,       
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'JMC': {'opcode': OPCODE_JMC,       
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'JMS': {'opcode': OPCODE_JMS,       
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'CALL': {'opcode': OPCODE_CALL,     
-             'format': EncodingFormat.FORMAT_IMM},
+             'format': EncodingFormat.IMM},
     'RET': {'opcode': OPCODE_RET,       
-            'format': EncodingFormat.FORMAT_NONE},
+            'format': EncodingFormat.NONE},
     
     # Memory 
     'MOVRR': {'opcode': OPCODE_MOVRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'MOVRI': {'opcode': OPCODE_MOVRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'STORDR': {'opcode': OPCODE_STORDR, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'STORMI': {'opcode': OPCODE_STORMI, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'STORMR': {'opcode': OPCODE_STORMR, 
-               'format': EncodingFormat.FORMAT_REG_REG},
+               'format': EncodingFormat.REG_REG},
     'LOADRD': {'opcode': OPCODE_LOADRD, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'LOADRM': {'opcode': OPCODE_LOADRM, 
-               'format': EncodingFormat.FORMAT_REG_REG},
+               'format': EncodingFormat.REG_REG},
     'PUSHR': {'opcode': OPCODE_PUSHR,   
-              'format': EncodingFormat.FORMAT_REG},
+              'format': EncodingFormat.REG},
     'POPR': {'opcode': OPCODE_POPR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
     'STORBDR': {'opcode': OPCODE_STORBDR, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'STORBMI': {'opcode': OPCODE_STORBMI, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'STORBMR': {'opcode': OPCODE_STORBMR, 
-               'format': EncodingFormat.FORMAT_REG_REG},
+               'format': EncodingFormat.REG_REG},
     'LOADBRD': {'opcode': OPCODE_LOADBRD, 
-               'format': EncodingFormat.FORMAT_REG_IMM},
+               'format': EncodingFormat.REG_IMM},
     'LOADBRM': {'opcode': OPCODE_LOADBRM, 
-               'format': EncodingFormat.FORMAT_REG_REG},
+               'format': EncodingFormat.REG_REG},
     
     # Arithmetics
     'ADDRR': {'opcode': OPCODE_ADDRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'ADDRI': {'opcode': OPCODE_ADDRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'SUBRR': {'opcode': OPCODE_SUBRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'SUBRI': {'opcode': OPCODE_SUBRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'INCR': {'opcode': OPCODE_INCR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
     'DECR': {'opcode': OPCODE_DECR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
     'MULRR': {'opcode': OPCODE_MULRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'MULRI': {'opcode': OPCODE_MULRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'DIVRR': {'opcode': OPCODE_DIVRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'DIVRI': {'opcode': OPCODE_DIVRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
 
     # Bit ops
     'ANDRR': {'opcode': OPCODE_ANDRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'ANDRI': {'opcode': OPCODE_ANDRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'ORRR': {'opcode': OPCODE_ORRR,     
-             'format': EncodingFormat.FORMAT_REG_REG},
+             'format': EncodingFormat.REG_REG},
     'ORRI': {'opcode': OPCODE_ORRI,     
-             'format': EncodingFormat.FORMAT_REG_IMM},
+             'format': EncodingFormat.REG_IMM},
     'XORRR': {'opcode': OPCODE_XORRR,   
-              'format': EncodingFormat.FORMAT_REG_REG},
+              'format': EncodingFormat.REG_REG},
     'XORRI': {'opcode': OPCODE_XORRI,   
-              'format': EncodingFormat.FORMAT_REG_IMM},
+              'format': EncodingFormat.REG_IMM},
     'NOTR': {'opcode': OPCODE_NOTR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
     'SHRR': {'opcode': OPCODE_SHRR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
     'SHLR': {'opcode': OPCODE_SHLR,     
-             'format': EncodingFormat.FORMAT_REG},
+             'format': EncodingFormat.REG},
 
     # SP and BP ops
     'MOVSPR': {'opcode': OPCODE_MOVSPR,   
-            'format': EncodingFormat.FORMAT_REG},
+            'format': EncodingFormat.REG},
     'MOVRSP': {'opcode': OPCODE_MOVRSP,   
-            'format': EncodingFormat.FORMAT_REG},
+            'format': EncodingFormat.REG},
     'ADDSPI': {'opcode': OPCODE_ADDSPI,   
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'SUBSPI': {'opcode': OPCODE_SUBSPI,   
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'MOVBPR': {'opcode': OPCODE_MOVBPR,   
-            'format': EncodingFormat.FORMAT_REG},
+            'format': EncodingFormat.REG},
     'MOVRBP': {'opcode': OPCODE_MOVRBP,   
-            'format': EncodingFormat.FORMAT_REG},
+            'format': EncodingFormat.REG},
     'ADDBPI': {'opcode': OPCODE_ADDBPI,   
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
     'SUBBPI': {'opcode': OPCODE_SUBBPI,   
-            'format': EncodingFormat.FORMAT_IMM},
+            'format': EncodingFormat.IMM},
 }
 
 class TokenTypes:
@@ -239,6 +240,11 @@ class ExprTypes:
     LOCAL = 1
     EXTERN = 2
     EXTERN_CONST = 3
+
+@dataclass
+class InstructionPayload:
+    mnemonic: str
+    operands: list[str]
 
 class Record:
     def __init__(self, type, address, size, payload):
@@ -478,9 +484,9 @@ def encode_instruction(record, verbose=False):
 
     record.encoded_bytes.append(opcode)
     match format:
-        case EncodingFormat.FORMAT_NONE:
+        case EncodingFormat.NONE:
             pass
-        case EncodingFormat.FORMAT_REG:
+        case EncodingFormat.REG:
             tokens = tokenize_expr(operands[0])
             match check_expr(tokens):
                 case ExprTypes.ILLEGAL:
@@ -491,7 +497,7 @@ def encode_instruction(record, verbose=False):
                 case ExprTypes.EXTERN | ExprTypes.EXTERN_CONST:
                     raise ValueError("Can't use external for register name.")
 
-        case EncodingFormat.FORMAT_REG_REG:
+        case EncodingFormat.REG_REG:
             tokens1 = tokenize_expr(operands[0])
             match check_expr(tokens1):
                 case ExprTypes.ILLEGAL:
@@ -508,7 +514,7 @@ def encode_instruction(record, verbose=False):
             reg_byte = recursive_eval(tokens1) << 4 | recursive_eval(tokens2)
 
             record.encoded_bytes.append(reg_byte)
-        case EncodingFormat.FORMAT_IMM:
+        case EncodingFormat.IMM:
             tokens = tokenize_expr(operands[0])
             match check_expr(tokens):
                 case ExprTypes.ILLEGAL:
@@ -529,7 +535,7 @@ def encode_instruction(record, verbose=False):
                 case ExprTypes.EXTERN_CONST:
                     raise ValueError("Offset not yet implemented.")
 
-        case EncodingFormat.FORMAT_REG_IMM:
+        case EncodingFormat.REG_IMM:
             tokens1 = tokenize_expr(operands[0])
             match check_expr(tokens1):
                 case ExprTypes.ILLEGAL:
@@ -750,10 +756,8 @@ def main():
                             RecordTypes.INSTRUCTION, 
                             cur_address, 
                             size, 
-                            {
-                                "mnemonic": instruction,
-                                "operands": operands
-                            }))
+                            InstructionPayload(instruction, operands)
+                            ))
                         cur_address += size                    
                     else:
                         raise ValueError(f"Unknown instruction: {instruction}")
