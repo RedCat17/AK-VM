@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -30,8 +31,8 @@
 // Control flow
 #define OPCODE_NOP     0x00
 #define OPCODE_HLT     0x01
-#define OPCODE_CMPRR   0x02
-#define OPCODE_CMPRI   0x03
+#define OPCODE_CMPR   0x02
+#define OPCODE_CMPI   0x03
 #define OPCODE_JMP     0x04
 #define OPCODE_JMZ     0x05
 #define OPCODE_JNZ     0x06
@@ -41,15 +42,15 @@
 #define OPCODE_RET     0x0A
 
 // Memory
-#define OPCODE_MOVRR   0x10
-#define OPCODE_MOVRI   0x11
+#define OPCODE_MOVR   0x10
+#define OPCODE_MOVI   0x11
 #define OPCODE_STORDR  0x12
 #define OPCODE_STORMI  0x13
 #define OPCODE_STORMR  0x14
 #define OPCODE_LOADRD  0x15
 #define OPCODE_LOADRM  0x16
-#define OPCODE_PUSHR   0x17
-#define OPCODE_POPR    0x18
+#define OPCODE_PUSH   0x17
+#define OPCODE_POP    0x18
 #define OPCODE_STORBDR  0x19
 #define OPCODE_STORBMI  0x1A
 #define OPCODE_STORBMR  0x1B
@@ -57,37 +58,37 @@
 #define OPCODE_LOADBRM  0x1D
 
 // Arithmetics
-#define OPCODE_ADDRR   0x20
-#define OPCODE_ADDRI   0x21
-#define OPCODE_SUBRR   0x22
-#define OPCODE_SUBRI   0x23
-#define OPCODE_INCR    0x24
-#define OPCODE_DECR    0x25
-#define OPCODE_MULRR   0x26
-#define OPCODE_MULRI   0x27
-#define OPCODE_DIVRR   0x28
-#define OPCODE_DIVRI   0x29
+#define OPCODE_ADDR   0x20
+#define OPCODE_ADDI   0x21
+#define OPCODE_SUBR   0x22
+#define OPCODE_SUBI   0x23
+#define OPCODE_INC    0x24
+#define OPCODE_DEC    0x25
+#define OPCODE_MULR   0x26
+#define OPCODE_MULI   0x27
+#define OPCODE_DIVR   0x28
+#define OPCODE_DIVI   0x29
 
 // Bit ops
-#define OPCODE_ANDRR   0x30
-#define OPCODE_ANDRI   0x31
-#define OPCODE_ORRR    0x32
-#define OPCODE_ORRI    0x33
-#define OPCODE_XORRR   0x34
-#define OPCODE_XORRI   0x35
-#define OPCODE_NOTR    0x36
-#define OPCODE_SHRR    0x37
-#define OPCODE_SHLR    0x38
+#define OPCODE_ANDR   0x30
+#define OPCODE_ANDI   0x31
+#define OPCODE_ORR    0x32
+#define OPCODE_ORI    0x33
+#define OPCODE_XORR   0x34
+#define OPCODE_XORI   0x35
+#define OPCODE_NOT    0x36
+#define OPCODE_SHR    0x37
+#define OPCODE_SHL    0x38
 
 // SP and BP ops
-#define OPCODE_MOVSPR  0x40
-#define OPCODE_MOVRSP  0x41
-#define OPCODE_ADDSPI  0x42
-#define OPCODE_SUBSPI  0x43
-#define OPCODE_MOVBPR  0x44
-#define OPCODE_MOVRBP  0x45
-#define OPCODE_ADDBPI  0x46
-#define OPCODE_SUBBPI  0x47
+#define OPCODE_SETSP  0x40
+#define OPCODE_GETSP  0x41
+#define OPCODE_ADDSP  0x42
+#define OPCODE_SUBSP  0x43
+#define OPCODE_SETBP  0x44
+#define OPCODE_GETBP  0x45
+#define OPCODE_ADDBP  0x46
+#define OPCODE_SUBBP  0x47
 
 // Encoding formats enum
 typedef enum {
@@ -109,8 +110,8 @@ OpcodeData opcode_table[256] = {
     // Control flow
     [OPCODE_NOP]   = {"NOP",   FORMAT_NONE},
     [OPCODE_HLT]   = {"HLT",   FORMAT_NONE},
-    [OPCODE_CMPRR] = {"CMPRR", FORMAT_REG_REG},
-    [OPCODE_CMPRI] = {"CMPRI", FORMAT_REG_IMM},
+    [OPCODE_CMPR] = {"CMPR", FORMAT_REG_REG},
+    [OPCODE_CMPI] = {"CMPI", FORMAT_REG_IMM},
     [OPCODE_JMP]   = {"JMP",   FORMAT_IMM},
     [OPCODE_JMZ]   = {"JMZ",   FORMAT_IMM},
     [OPCODE_JNZ]   = {"JNZ",   FORMAT_IMM},
@@ -119,52 +120,52 @@ OpcodeData opcode_table[256] = {
     [OPCODE_CALL]  = {"CALL",  FORMAT_IMM},
     [OPCODE_RET]   = {"RET",   FORMAT_NONE},
     // Memory
-    [OPCODE_MOVRR]  = {"MOVRR",  FORMAT_REG_REG},
-    [OPCODE_MOVRI]  = {"MOVRI",  FORMAT_REG_IMM},
+    [OPCODE_MOVR]  = {"MOVR",  FORMAT_REG_REG},
+    [OPCODE_MOVI]  = {"MOVI",  FORMAT_REG_IMM},
     [OPCODE_STORDR] = {"STORDR", FORMAT_REG_IMM},  // STORDI not included as it would require 2 immediate values
     [OPCODE_STORMI] = {"STORMI", FORMAT_REG_IMM},
     [OPCODE_STORMR] = {"STORMR", FORMAT_REG_REG},
     [OPCODE_LOADRD] = {"LOADRD", FORMAT_REG_IMM},
     [OPCODE_LOADRM] = {"LOADRM", FORMAT_REG_REG},
-    [OPCODE_PUSHR]  = {"PUSHR",  FORMAT_REG},
-    [OPCODE_POPR]   = {"POPR",   FORMAT_REG},
+    [OPCODE_PUSH]  = {"PUSH",  FORMAT_REG},
+    [OPCODE_POP]   = {"POP",   FORMAT_REG},
     [OPCODE_STORBDR] = {"STORBDR", FORMAT_REG_IMM},
     [OPCODE_STORBMI] = {"STORBMI", FORMAT_REG_IMM},
     [OPCODE_STORBMR] = {"STORBMR", FORMAT_REG_REG},
     [OPCODE_LOADBRD] = {"LOADBRD", FORMAT_REG_IMM},
     [OPCODE_LOADBRM] = {"LOADBRM", FORMAT_REG_REG},
     // Arithmetics
-    [OPCODE_ADDRR]  = {"ADDRR",  FORMAT_REG_REG},
-    [OPCODE_ADDRI]  = {"ADDRI",  FORMAT_REG_IMM},
-    [OPCODE_SUBRR]  = {"SUBRR",  FORMAT_REG_REG},
-    [OPCODE_SUBRI]  = {"SUBRI",  FORMAT_REG_IMM},
-    [OPCODE_INCR]   = {"INCR",   FORMAT_REG},
-    [OPCODE_DECR]   = {"DECR",   FORMAT_REG},
-    [OPCODE_MULRR]  = {"MULRR",  FORMAT_REG_REG},
-    [OPCODE_MULRI]  = {"MULRI",  FORMAT_REG_IMM},
-    [OPCODE_DIVRR]  = {"DIVRR",  FORMAT_REG_REG},
-    [OPCODE_DIVRI]  = {"DIVRI",  FORMAT_REG_IMM},
+    [OPCODE_ADDR]  = {"ADDR",  FORMAT_REG_REG},
+    [OPCODE_ADDI]  = {"ADDI",  FORMAT_REG_IMM},
+    [OPCODE_SUBR]  = {"SUBR",  FORMAT_REG_REG},
+    [OPCODE_SUBI]  = {"SUBI",  FORMAT_REG_IMM},
+    [OPCODE_INC]   = {"INC",   FORMAT_REG},
+    [OPCODE_DEC]   = {"DEC",   FORMAT_REG},
+    [OPCODE_MULR]  = {"MULR",  FORMAT_REG_REG},
+    [OPCODE_MULI]  = {"MULI",  FORMAT_REG_IMM},
+    [OPCODE_DIVR]  = {"DIVR",  FORMAT_REG_REG},
+    [OPCODE_DIVI]  = {"DIVI",  FORMAT_REG_IMM},
 
     // Bit ops
-    [OPCODE_ANDRR]  = {"ANDRR",  FORMAT_REG_REG},
-    [OPCODE_ANDRI]  = {"ANDRI",  FORMAT_REG_IMM},
-    [OPCODE_ORRR]   = {"ORRR",   FORMAT_REG_REG},
-    [OPCODE_ORRI]   = {"ORRI",   FORMAT_REG_IMM},
-    [OPCODE_XORRR]  = {"XORRR",  FORMAT_REG_REG},
-    [OPCODE_XORRI]  = {"XORRI",  FORMAT_REG_IMM},
-    [OPCODE_NOTR]   = {"NOTR",   FORMAT_REG},
-    [OPCODE_SHRR]   = {"SHRR",   FORMAT_REG},
-    [OPCODE_SHLR]   = {"SHLR",   FORMAT_REG},
+    [OPCODE_ANDR]  = {"ANDR",  FORMAT_REG_REG},
+    [OPCODE_ANDI]  = {"ANDI",  FORMAT_REG_IMM},
+    [OPCODE_ORR]   = {"ORR",   FORMAT_REG_REG},
+    [OPCODE_ORI]   = {"ORI",   FORMAT_REG_IMM},
+    [OPCODE_XORR]  = {"XORR",  FORMAT_REG_REG},
+    [OPCODE_XORI]  = {"XORI",  FORMAT_REG_IMM},
+    [OPCODE_NOT]   = {"NOT",   FORMAT_REG},
+    [OPCODE_SHR]   = {"SHR",   FORMAT_REG},
+    [OPCODE_SHL]   = {"SHL",   FORMAT_REG},
 
     // SP and BP ops
-    [OPCODE_MOVSPR]  = {"MOVSPR",  FORMAT_REG},
-    [OPCODE_MOVRSP]  = {"MOVRSP",  FORMAT_REG},
-    [OPCODE_ADDSPI]  = {"ADDSPI",  FORMAT_IMM},
-    [OPCODE_SUBSPI]  = {"SUBSPI",  FORMAT_IMM},
-    [OPCODE_MOVBPR]  = {"MOVBPR",  FORMAT_REG},
-    [OPCODE_MOVRBP]  = {"MOVRBP",  FORMAT_REG},
-    [OPCODE_ADDBPI]  = {"ADDBPI",  FORMAT_IMM},
-    [OPCODE_SUBBPI]  = {"SUBBPI",  FORMAT_IMM},
+    [OPCODE_SETSP]  = {"SETSP",  FORMAT_REG},
+    [OPCODE_GETSP]  = {"GETSP",  FORMAT_REG},
+    [OPCODE_ADDSP]  = {"ADDSP",  FORMAT_IMM},
+    [OPCODE_SUBSP]  = {"SUBSP",  FORMAT_IMM},
+    [OPCODE_SETBP]  = {"SETBP",  FORMAT_REG},
+    [OPCODE_GETBP]  = {"GETBP",  FORMAT_REG},
+    [OPCODE_ADDBP]  = {"ADDBP",  FORMAT_IMM},
+    [OPCODE_SUBBP]  = {"SUBBP",  FORMAT_IMM},
 };
 
 // CPU struct stores CPU internal data: registers, PC, SP, BP and flags
@@ -205,7 +206,7 @@ int exec_load_program(VM *vm, const char *filename) {
     }
 
     int byte = fgetc(file);
-    int i = 0;
+    size_t i = 0;
     while (byte != EOF && i < sizeof(vm->memory)) {
         vm->memory[i++] = byte;
         byte = fgetc(file);
@@ -438,11 +439,11 @@ void run_vm(VM *vm) {
             case OPCODE_HLT: 
                 fprintf(stderr, "Halting.\n");
                 return;
-            case OPCODE_CMPRR: 
+            case OPCODE_CMPR: 
                 fprintf(stderr, "CMP reg %d reg %d\n", reg1, reg2);
                 cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
-            case OPCODE_CMPRI: 
+            case OPCODE_CMPI: 
                 fprintf(stderr, "CMP reg %d imm %d\n", reg1, value);
                 cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 break;
@@ -488,11 +489,11 @@ void run_vm(VM *vm) {
                 break;
 
             // Memory
-            case OPCODE_MOVRR: 
+            case OPCODE_MOVR: 
                 fprintf(stderr, "MOV reg %d <- reg %d\n", reg1, reg2);
                 vm->cpu.registers[reg1] = vm->cpu.registers[reg2];
                 break;
-            case OPCODE_MOVRI: 
+            case OPCODE_MOVI: 
                 fprintf(stderr, "MOV reg %d <- imm %d\n", reg1, value);
                 vm->cpu.registers[reg1] = value;
                 break;
@@ -516,11 +517,11 @@ void run_vm(VM *vm) {
                 fprintf(stderr, "LOAD reg %d <- ind %d\n", reg1, reg2);
                 exec_load(vm, reg1, vm->cpu.registers[reg2]);
                 break;
-            case OPCODE_PUSHR: 
+            case OPCODE_PUSH: 
                 fprintf(stderr, "PUSH reg %d\n", reg1);
                 exec_push(vm, vm->cpu.registers[reg1]);
                 break;
-            case OPCODE_POPR: 
+            case OPCODE_POP: 
                 fprintf(stderr, "POP to reg %d\n", reg1);
                 exec_pop(vm, reg1);
                 break;
@@ -546,125 +547,125 @@ void run_vm(VM *vm) {
                 break;
 
             // Arithmetics
-            case OPCODE_ADDRR: 
+            case OPCODE_ADDR: 
                 fprintf(stderr, "ADD reg %d <- reg %d\n", reg1, reg2);
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_ADDRI: 
+            case OPCODE_ADDI: 
                 fprintf(stderr, "ADD reg %d <- imm %d\n", reg1, value);
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_SUBRR: 
+            case OPCODE_SUBR: 
                 fprintf(stderr, "SUB reg %d <- reg %d\n", reg1, reg2);
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_SUBRI: 
+            case OPCODE_SUBI: 
                 fprintf(stderr, "SUB reg %d <- imm %d\n", reg1, value);
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_INCR: 
+            case OPCODE_INC: 
                 fprintf(stderr, "INC reg %d\n", reg1);
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_DECR: 
+            case OPCODE_DEC: 
                 fprintf(stderr, "DEC reg %d\n", reg1);
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_MULRR: 
+            case OPCODE_MULR: 
                 fprintf(stderr, "MUL reg %d <- reg %d\n", reg1, reg2);
                 result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_MULRI: 
+            case OPCODE_MULI: 
                 fprintf(stderr, "MUL reg %d <- imm %d\n", reg1, value);
                 result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_DIVRR: 
+            case OPCODE_DIVR: 
                 fprintf(stderr, "DIV reg %d <- reg %d\n", reg1, reg2);
                 result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
-            case OPCODE_DIVRI: 
+            case OPCODE_DIVI: 
                 fprintf(stderr, "DIV reg %d <- imm %d\n", reg1, value);
                 result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
 
             // Bit ops
-            case OPCODE_ANDRR:
+            case OPCODE_ANDR:
                 fprintf(stderr, "AND reg %d reg %d.\n", reg1, reg2);
                 vm->cpu.registers[reg1] &= vm->cpu.registers[reg2];
                 break;
-            case OPCODE_ANDRI: 
+            case OPCODE_ANDI: 
                 fprintf(stderr, "AND reg %d imm %d.\n", value, reg1);
                 vm->cpu.registers[reg1] &= value;
                 break;
-            case OPCODE_ORRR: 
+            case OPCODE_ORR: 
                 fprintf(stderr, "OR reg %d reg %d.\n", reg1, reg2);
                 vm->cpu.registers[reg1] |= vm->cpu.registers[reg2];
                 break;
-            case OPCODE_ORRI: 
+            case OPCODE_ORI: 
                 fprintf(stderr, "OR reg %d imm %d.\n", value, reg1);
                 vm->cpu.registers[reg1] |= value;
                 break;
-            case OPCODE_XORRR: 
+            case OPCODE_XORR: 
                 fprintf(stderr, "XOR reg %d reg %d.\n", reg1, reg2);
                 vm->cpu.registers[reg1] ^= vm->cpu.registers[reg2];
                 break;
-            case OPCODE_XORRI: 
+            case OPCODE_XORI: 
                 fprintf(stderr, "XOR reg %d imm %d.\n", value, reg1);
                 vm->cpu.registers[reg1] ^= value;
                 break;
-            case OPCODE_NOTR: 
+            case OPCODE_NOT: 
                 fprintf(stderr, "NOT reg %d.\n", reg1);
                 vm->cpu.registers[reg1] = ~vm->cpu.registers[reg1];
                 break;
-            case OPCODE_SHRR: 
+            case OPCODE_SHR: 
                 fprintf(stderr, "SHR reg %d.\n", reg1);
                 vm->cpu.registers[reg1] >>= 1;
                 break;
-            case OPCODE_SHLR: 
+            case OPCODE_SHL: 
                 fprintf(stderr, "SHL reg %d.\n", reg1);
                 vm->cpu.registers[reg1] <<= 1;
                 break;
 
             // SP and BP ops
-            case OPCODE_MOVSPR: 
+            case OPCODE_SETSP: 
                 fprintf(stderr, "MOV SP <- reg %d\n", reg1);
                 vm->cpu.sp = vm->cpu.registers[reg1];
                 break;
-            case OPCODE_MOVRSP: 
+            case OPCODE_GETSP: 
                 fprintf(stderr, "MOV reg %d <- SP\n", reg1);
                 vm->cpu.registers[reg1] = vm->cpu.sp;
                 break;
-            case OPCODE_ADDSPI: 
+            case OPCODE_ADDSP: 
                 fprintf(stderr, "ADD SP <- imm %d\n", value);
                 vm->cpu.sp = vm->cpu.sp + value;
                 break;
-            case OPCODE_SUBSPI: 
+            case OPCODE_SUBSP: 
                 fprintf(stderr, "SUB SP <- imm %d\n", value);
                 vm->cpu.sp = vm->cpu.sp - value;
                 break;
-            case OPCODE_MOVBPR: 
+            case OPCODE_SETBP: 
                 fprintf(stderr, "MOV BP <- reg %d\n", reg1);
                 vm->cpu.bp = vm->cpu.registers[reg1];
                 break;
-            case OPCODE_MOVRBP: 
+            case OPCODE_GETBP: 
                 fprintf(stderr, "MOV reg %d <- BP\n", reg1);
                 vm->cpu.registers[reg1] = vm->cpu.bp;
                 break;
-            case OPCODE_ADDBPI: 
+            case OPCODE_ADDBP: 
                 fprintf(stderr, "ADD BP <- imm %d\n", value);
                 vm->cpu.bp = vm->cpu.bp + value;
                 break;
-            case OPCODE_SUBBPI: 
+            case OPCODE_SUBBP: 
                 fprintf(stderr, "SUB BP <- imm %d\n", value);
                 vm->cpu.bp = vm->cpu.bp - value;
                 break;
@@ -695,18 +696,18 @@ int main(int argc, char *argv[]) {
 
     // // loop and output test
     // uint8_t program[] = {
-    //     0x0C, // MOVRI
+    //     0x0C, // MOVI
     //     0b00000000, 
     //     0x0F, 0x00, 
-    //     0x0B, // MOVRR
+    //     0x0B, // MOVR
     //     0b00010000,
-    //     0x15, // ADDRI
+    //     0x15, // ADDI
     //     0b00010000,
     //     48, 0x00,
     //     0x0D, // STORDR
     //     0b00010000,
     //     0x01, 0xFF,
-    //     0x19, // DECR
+    //     0x19, // DEC
     //     0b00000000,
     //     0x06, // JNZ
     //     0x04, 0x00, 

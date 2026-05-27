@@ -2,13 +2,13 @@
 .DEF OUT_ADDRESS 0xF801
 
 ; set reg 0 to 16
-MOVRI R0, 16
+MOVI R0, 16
 
 ; decrementing loop to print characters
-MOVRR R1, R0
-ADDRI R1, 48
+MOVR R1, R0
+ADDI R1, 48
 STORDR R1, OUT_ADDRESS
-DECR R0
+DEC R0
 JNZ 4
 
 HLT

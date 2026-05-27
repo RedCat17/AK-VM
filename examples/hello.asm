@@ -5,13 +5,13 @@ msg:
 .STR "Hello world!"
 
 start:
-MOVRI R0, msg ; load msg address to reg 0
+MOVI R0, msg ; load msg address to reg 0
 
 loop:
 LOADBRM R1, R0 ; load byte from memory to reg 1
 STORBDR R1, 0xF801 ; send byte to TX address
-INCR R0 ; increment pointer
-CMPRI R0, start ; test if we reached end of string
+INC R0 ; increment pointer
+CMPI R0, start ; test if we reached end of string
 JNZ loop
 
 HLT
