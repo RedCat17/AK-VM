@@ -11,7 +11,7 @@ Reg - register operand (R0-R15)
 | [NOP](#nop)        | No operation                         | 0x00   |
 | [HLT](#hlt)        | Stop execution                       | 0x01   |
 | [CMPR](#cmp)       | Compare values and set flags         | 0x02   |
-| [CMPI](#cmp)       | -                                    | 0x02   |
+| [CMPI](#cmp)       | -                                    | 0x03   |
 | [JMP](#jmp)        | Uncoditional jump                    | 0x04   |
 | [JZ](#jz)          | Jump if Z flag is set                | 0x05   |
 | [JNZ](#jnz)        | Jump if not Z                        | 0x06   |
@@ -75,79 +75,100 @@ Reg - register operand (R0-R15)
 | [ADDBP](#addbp)    | Add BP                               | 0x36   |
 | [SUBBP](#subbp)    | Substract BP                         | 0x37   |
 
-#### NOP
+## NOP
 
 Description:
+
 No operation. Does nothing.
 
 Encoding:
+```
 byte1: 0x00
+```
 
 Operands:
+
 None
 
 Flags affected:
+
 None
 
 Example: 
+
 NOP
 
-#### HLT
+## HLT
 
 Description:
+
 Stop execution, halt VM.
 
 Encoding:
+```
 byte1: 0x01
+```
 
 Operands:
-None
+- None
 
 Flags affected:
+
 None
 
 Example: 
+
 HLT
 
-#### CMPR
+## CMPR
 
 CMPR reg1, reg2
 
 Description:
+
 Compare 2 registers and set flags.
 
 Encoding:
-byte1: 0x00
+```
+byte1: 0x02
 byte2: reg1 | reg2
+```
 
 Operands:
-reg1
-reg2
+- reg1
+- reg2
 
 Flags affected:
+
 Z, C, S
 
 Example: 
+
 CMPR R0, R1
 
-#### CMPI
+## CMPI
 
-CMPR reg1, imm
+CMPI reg1, imm
 
 Description:
+
 Compare register with immediate value and set flags.
 
 Encoding:
-byte1: 0x00
+```
+byte1: 0x03
 byte2: reg1 | 0000
 byte3, byte4: imm
+```
 
 Operands:
-reg1
-imm
+- reg1
+- imm
 
 Flags affected:
+
 Z, C, S
 
 Example: 
+
 CMPR R0, 10
