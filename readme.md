@@ -39,3 +39,11 @@ Redirecting debug output to file:
 ```
 ./akvm program.bin 2> output.txt
 ```
+
+## Documentation
+
+See:
+[VM](docs/vm.md)
+[ISA](docs/isa.md)
+[Assembler](docs/assembler.md)
+[Linker](docs/linker.md)
