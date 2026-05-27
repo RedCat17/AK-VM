@@ -77,46 +77,46 @@ Reg - register operand (R0-R15)
 
 ## NOP
 
-Description:
+**Description:**
 
 No operation. Does nothing.
 
-Encoding:
+**Encoding:**
 ```
 byte1: 0x00
 ```
 
-Operands:
+**Operands:**
 
 None
 
-Flags affected:
+**Flags affected:**
 
 None
 
-Example: 
+**Example:** 
 
 NOP
 
 ## HLT
 
-Description:
+**Description:**
 
 Stop execution, halt VM.
 
-Encoding:
+**Encoding:**
 ```
 byte1: 0x01
 ```
 
-Operands:
+**Operands:**
 - None
 
-Flags affected:
+**Flags affected:**
 
 None
 
-Example: 
+**Example:** 
 
 HLT
 
@@ -124,25 +124,25 @@ HLT
 
 CMPR reg1, reg2
 
-Description:
+**Description:**
 
 Compare 2 registers and set flags.
 
-Encoding:
+**Encoding:**
 ```
 byte1: 0x02
 byte2: reg1 | reg2
 ```
 
-Operands:
+**Operands:**
 - reg1
 - reg2
 
-Flags affected:
+**Flags affected:**
 
 Z, C, S
 
-Example: 
+**Example:** 
 
 CMPR R0, R1
 
@@ -150,25 +150,25 @@ CMPR R0, R1
 
 CMPI reg1, imm
 
-Description:
+**Description:**
 
 Compare register with immediate value and set flags.
 
-Encoding:
+**Encoding:**
 ```
 byte1: 0x03
 byte2: reg1 | 0000
 byte3, byte4: imm
 ```
 
-Operands:
+**Operands:**
 - reg1
 - imm
 
-Flags affected:
+**Flags affected:**
 
 Z, C, S
 
-Example: 
+**Example:** 
 
 CMPR R0, 10
