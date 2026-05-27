@@ -2,3 +2,4 @@
 .linker/
 .legacy/
 .local/
+.clocignore
