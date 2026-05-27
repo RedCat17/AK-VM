@@ -43,11 +43,7 @@ Redirecting debug output to file:
 ## Documentation
 
 See:
-
 - [VM](docs/vm.md)
-
 - [ISA](docs/isa.md)
-
 - [Assembler](docs/assembler.md)
-
 - [Linker](docs/linker.md)
