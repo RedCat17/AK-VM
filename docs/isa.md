@@ -21,28 +21,38 @@
 Every instruction is 1-byte, 2-byte or 4-byte depending on opcode. Each opcode has a single specific encoding type.
 
 ### NONE
+```
 Byte 1: [8 bits: opcode]
+```
 
 ### REG
+```
 Byte 1: [8 bits: opcode]
 Byte 2: [4 bits: reg1, 4 bits: reserved]
+```
 
 ### REG_REG
+```
 Byte 1: [8 bits: opcode]
 Byte 2: [4 bits: reg1, 4 bits: reg2]
+```
 
 ### IMM
+```
 Byte 1: [8 bits: opcode]
 Byte 3-4: [16 bits: immediate or address]
+```
 
 ### REG_IMM
+```
 Byte 1: [8 bits: opcode]
 Byte 2: [4 bits: reg1, 4 bits: reserved]
 Byte 3-4: [16 bits: immediate or address]
+```
 
 ## Symbols:
-Imm - immediate operand or address
-Reg - register operand (R0-R15)
+- Imm - immediate operand or address
+- Reg - register operand (R0-R15)
 
 ## Control Flow
 
