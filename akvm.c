@@ -7,15 +7,12 @@
 #define MEMORY_SIZE 0x10000 // 64 KB
 
 // Memory layout
-#define HEAP_ADDRESS     0x4000
-#define VRAM_ADDRESS     0xF000
-#define IO_ADDRESS       0xF800
-#define STACK_BEGIN    0xFFFE
-#define STACK_END    0xF900
+#define HEAP_ADDRESS        0x4000
+#define STACK_BEGIN         0xFFFE
+#define STACK_END           0xF900
 
 #define RX_ADDRESS              0xF800 // Writing to this address prints to console
 #define TX_ADDRESS              0xF801 // Reading from here reads from console
-#define REFRESH_SCREEN_ADDRESS  0xF802
 
 // FLAGS register is split into bits using these bitmasks:
 #define ZERO_FLAG  0b10000000

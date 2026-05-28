@@ -1,5 +1,45 @@
 # ISA
 
+## Features
+
+- 16 general purpose 16-bit registers
+- PC, SP, flags (Z, C, S) registers
+- 64 KB flat byte-addressable memory
+- Stack (grows downwards)
+- Variable-length instructions (1, 2, 4-byte)
+- Functions (via CALL, args passed via stack)
+- Serial I/O
+- Little-endian
+
+## Addressing modes
+- Immediate (I): literal value
+- Register (R): by specified register
+- Direct memory (D): by specified address
+- Indirect memory (M): by address in specified register
+
+## Encoding formats
+Every instruction is 1-byte, 2-byte or 4-byte depending on opcode. Each opcode has a single specific encoding type.
+
+### NONE
+Byte 1: [8 bits: opcode]
+
+### REG
+Byte 1: [8 bits: opcode]
+Byte 2: [4 bits: reg1, 4 bits: reserved]
+
+### REG_REG
+Byte 1: [8 bits: opcode]
+Byte 2: [4 bits: reg1, 4 bits: reg2]
+
+### IMM
+Byte 1: [8 bits: opcode]
+Byte 3-4: [16 bits: immediate or address]
+
+### REG_IMM
+Byte 1: [8 bits: opcode]
+Byte 2: [4 bits: reg1, 4 bits: reserved]
+Byte 3-4: [16 bits: immediate or address]
+
 ## Symbols:
 Imm - immediate operand or address
 Reg - register operand (R0-R15)
@@ -10,9 +50,9 @@ Reg - register operand (R0-R15)
 |--------------------|--------------------------------------|--------|
 | [NOP](#nop)        | No operation                         | 0x00   |
 | [HLT](#hlt)        | Stop execution                       | 0x01   |
-| [CMPR](#cmp)       | Compare values and set flags         | 0x02   |
-| [CMPI](#cmp)       | -                                    | 0x03   |
-| [JMP](#jmp)        | Uncoditional jump                    | 0x04   |
+| [CMPR](#cmpr)      | Compare values and set flags         | 0x02   |
+| [CMPI](#cmpi)      | -                                    | 0x03   |
+| [JMP](#jmp)        | Unconditional jump                   | 0x04   |
 | [JZ](#jz)          | Jump if Z flag is set                | 0x05   |
 | [JNZ](#jnz)        | Jump if not Z                        | 0x06   |
 | [JMC](#jmc)        | Jump if C                            | 0x07   |
@@ -24,56 +64,56 @@ Reg - register operand (R0-R15)
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
-| [MOVR](#movi)      | Copy word from src to dst            | 0x10   |
+| [MOVR](#movr)      | Copy word from src to dst            | 0x10   |
 | [MOVI](#movi)      | -                                    | 0x11   |
 | [STOR](#stor)      | Store word to memory                 | 0x12   |
 | [LOAD](#load)      | Loads word from memory to dst        | 0x15   |
 | [PUSH](#push)      | Pushes word to stack                 | 0x17   |
 | [POP](#pop)        | Pops word from stack                 | 0x18   |
-| [STORB](#stor)     | Stores byte from src in memory       | 0x19   |
-| [LOADB](#load)     | Loads byte from memory to dst        | 0x1B   |
+| [STORB](#storb)    | Stores byte from src in memory       | 0x19   |
+| [LOADB](#loadb)    | Loads byte from memory to dst        | 0x1B   |
 
 ## Arithmetics
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
-| [ADDR](#addri)     | Adds src to dst                      | 0x20   |
-| [ADDI](#addri)     | -                                    | 0x21   |
-| [SUBR](#subri)     | Subs src from dst                    | 0x22   |
-| [SUBI](#subri)     | -                                    | 0x23   |
+| [ADDR](#addr)      | Adds src to dst                      | 0x20   |
+| [ADDI](#addi)      | -                                    | 0x21   |
+| [SUBR](#subr)      | Subs src from dst                    | 0x22   |
+| [SUBI](#subi)      | -                                    | 0x23   |
 | [INC](#inc)        | Increments by 1                      | 0x24   |
 | [DEC](#dec)        | Decrements by 1                      | 0x25   |
-| [MULR](#mul)       | Multiplies R by R                    | 0x26   |
-| [MULI](#mul)       | Multiplies R by I                    | 0x27   |
-| [DIVR](#div)       | Divides R by R                       | 0x28   |
-| [DIVI](#div)       | Divides R by   I                     | 0x29   |
+| [MULR](#mulr)      | Multiplies R by R                    | 0x26   |
+| [MULI](#muli)      | Multiplies R by I                    | 0x27   |
+| [DIVR](#divr)      | Divides R by R                       | 0x28   |
+| [DIVI](#divi)      | Divides R by   I                     | 0x29   |
 
 ## Bit ops
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
-| [ANDR](#and)       | Bitwise AND                          | 0x30   |
-| [ANDI](#and)       | -                                    | 0x31   |
-| [ORR](#or)         | Bitwise OR                           | 0x32   |
-| [ORI](#or)         | -                                    | 0x33   |
-| [XORR](#xor)       | Bitwise XOR                          | 0x34   |
-| [XORI](#xor)       | -                                    | 0x35   |
+| [ANDR](#andr)      | Bitwise AND                          | 0x30   |
+| [ANDI](#andi)      | -                                    | 0x31   |
+| [ORR](#orr)        | Bitwise OR                           | 0x32   |
+| [ORI](#ori)        | -                                    | 0x33   |
+| [XORR](#xorr)      | Bitwise XOR                          | 0x34   |
+| [XORI](#xori)      | -                                    | 0x35   |
 | [NOT](#not)        | Bitwise NOT                          | 0x36   |
 | [SHR](#shr)        | Shift right                          | 0x37   |
-| [SHL](#shr)        | Shift left                           | 0x38   |
+| [SHL](#shl)        | Shift left                           | 0x38   |
 
 ## SP and BP ops
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
-| [SETSP](#setsp)    | Set SP                               | 0x30   |
-| [GETSP](#getsp)    | Get SP value                         | 0x31   |
-| [ADDSP](#addsp)    | Add SP                               | 0x32   |
-| [SUBSP](#subsp)    | Substract SP                         | 0x33   |
-| [SETBP](#setbp)    | Set BP                               | 0x34   |
-| [GETBP](#getbp)    | Get BP value                         | 0x35   |
-| [ADDBP](#addbp)    | Add BP                               | 0x36   |
-| [SUBBP](#subbp)    | Substract BP                         | 0x37   |
+| [SETSP](#setsp)    | Set SP                               | 0x40   |
+| [GETSP](#getsp)    | Get SP value                         | 0x41   |
+| [ADDSP](#addsp)    | Add SP                               | 0x42   |
+| [SUBSP](#subsp)    | Subtract SP                          | 0x43   |
+| [SETBP](#setbp)    | Set BP                               | 0x44   |
+| [GETBP](#getbp)    | Get BP value                         | 0x45   |
+| [ADDBP](#addbp)    | Add BP                               | 0x46   |
+| [SUBBP](#subbp)    | Subtract BP                          | 0x47   |
 
 ## NOP
 
@@ -171,4 +211,4 @@ Z, C, S
 
 **Example:** 
 
-CMPR R0, 10
+CMPI R0, 10
