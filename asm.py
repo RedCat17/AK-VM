@@ -3,19 +3,32 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 @dataclass
-class OperandReg:
+class OperandReg: # Rx
     reg: int
 
     def __str__(self):
         return f"R{self.reg}"
 
 @dataclass
-class OperandImm:
+class OperandImm: # expr
     expr: list
 
     def __str__(self):
         return ' '.join(t[1] for t in self.expr)
 
+@dataclass
+class OperandMemReg: # [Rx]
+    reg: int
+
+    def __str__(self):
+        return f"[R{self.reg}]"
+
+@dataclass
+class OperandMemImm: # [expr]
+    expr: list
+
+    def __str__(self):
+        return '[' + ' '.join(t[1] for t in self.expr) + ']'
 
 # @dataclass
 # class OperandAddr:
@@ -27,12 +40,50 @@ class OperandImm:
 #     I = opcode | rd | rs | immediate
 #     LS = opcode | rd | offset | rs(base)
 
+@dataclass
+class EncodingFormatSpec:
+    operand_types: tuple # e.g. (OperandReg, OperandImm)
+    length: int
+
 class EncodingFormat(Enum):
     NONE = auto()
     REG = auto()
     REG_REG = auto()
     IMM = auto()
     REG_IMM = auto()
+    REG_MEMREG = auto()
+    REG_MEMIMM = auto()
+
+FORMAT_SPECS = {
+    EncodingFormat.NONE: EncodingFormatSpec(
+        (),
+        1
+    ),
+    EncodingFormat.REG: EncodingFormatSpec(
+        (OperandReg,),
+        2
+    ),
+    EncodingFormat.REG_REG: EncodingFormatSpec(
+        (OperandReg, OperandReg),
+        2
+    ),
+    EncodingFormat.IMM: EncodingFormatSpec(
+        (OperandImm,),
+        3
+    ),
+    EncodingFormat.REG_IMM: EncodingFormatSpec(
+        (OperandReg, OperandImm),
+        4
+    ),
+    EncodingFormat.REG_MEMREG: EncodingFormatSpec(
+        (OperandReg, OperandMemReg),
+        2
+    ),
+    EncodingFormat.REG_MEMIMM: EncodingFormatSpec(
+        (OperandReg, OperandMemImm),
+        4
+    )
+}
 
 FORMAT_LENGTHS = {
     EncodingFormat.NONE: 1,
@@ -76,13 +127,13 @@ instruction_table = {
     'LOADRM': InstructionSpec(mnemonic='LOADRM', opcode=0x16, format=EncodingFormat.REG_REG),
     'PUSH': InstructionSpec(mnemonic='PUSH', opcode=0x17, format=EncodingFormat.REG),
     'POP': InstructionSpec(mnemonic='POP', opcode=0x18, format=EncodingFormat.REG),
-    'STORBDR': InstructionSpec(mnemonic='STORBDR', opcode=0x19, format=EncodingFormat.REG_IMM),
+    'STORBDR': InstructionSpec(mnemonic='STORBDR', opcode=0x19, format=EncodingFormat.REG_MEMIMM),
     'STORBMI': InstructionSpec(mnemonic='STORBMI', opcode=0x1A, format=EncodingFormat.REG_IMM),
-    'STORBMR': InstructionSpec(mnemonic='STORBMR', opcode=0x1B, format=EncodingFormat.REG_REG),
-    'LOADBRD': InstructionSpec(mnemonic='LOADBRD', opcode=0x1C, format=EncodingFormat.REG_IMM),
-    'LOADBRM': InstructionSpec(mnemonic='LOADBRM', opcode=0x1D, format=EncodingFormat.REG_REG),
+    'STORBMR': InstructionSpec(mnemonic='STORBMR', opcode=0x1B, format=EncodingFormat.REG_MEMREG),
+    'LOADBRD': InstructionSpec(mnemonic='LOADBRD', opcode=0x1C, format=EncodingFormat.REG_MEMIMM),
+    'LOADBRM': InstructionSpec(mnemonic='LOADBRM', opcode=0x1D, format=EncodingFormat.REG_MEMREG),
 
-    # Arithmetics
+    # Arithmetic
     'ADDR': InstructionSpec(mnemonic='ADDR', opcode=0x20, format=EncodingFormat.REG_REG),
     'ADDI': InstructionSpec(mnemonic='ADDI', opcode=0x21, format=EncodingFormat.REG_IMM),
     'SUBR': InstructionSpec(mnemonic='SUBR', opcode=0x22, format=EncodingFormat.REG_REG),
@@ -114,6 +165,58 @@ instruction_table = {
     'GETBP': InstructionSpec(mnemonic='GETBP', opcode=0x45, format=EncodingFormat.REG),
     'ADDBP': InstructionSpec(mnemonic='ADDBP', opcode=0x46, format=EncodingFormat.IMM),
     'SUBBP': InstructionSpec(mnemonic='SUBBP', opcode=0x47, format=EncodingFormat.IMM),
+}
+
+pattern_table = {
+    # Control flow
+    'CMP': {
+        EncodingFormat.REG_REG: instruction_table['CMPR'],
+        EncodingFormat.REG_IMM: instruction_table['CMPI'],
+    },
+    # Memory
+    'MOV': {
+        EncodingFormat.REG_REG: instruction_table['MOVR'],
+        EncodingFormat.REG_IMM: instruction_table['MOVI'],
+    },
+    'STORB': {
+        EncodingFormat.REG_MEMIMM: instruction_table['STORBDR'],
+        EncodingFormat.REG_IMM: instruction_table['STORBMI'],
+        EncodingFormat.REG_MEMREG: instruction_table['STORBMR'],
+    },
+    'LOADB': {
+        EncodingFormat.REG_MEMIMM: instruction_table['LOADBRD'],
+        EncodingFormat.REG_MEMREG: instruction_table['LOADBRM'],
+    },
+    # Arithmetic
+    'ADD': {
+        EncodingFormat.REG_REG: instruction_table['ADDR'],
+        EncodingFormat.REG_IMM: instruction_table['ADDI'],
+    },
+    'SUB': {
+        EncodingFormat.REG_REG: instruction_table['SUBR'],
+        EncodingFormat.REG_IMM: instruction_table['SUBI'],
+    },
+    'MUL': {
+        EncodingFormat.REG_REG: instruction_table['MULR'],
+        EncodingFormat.REG_IMM: instruction_table['MULI'],
+    },
+    'DIV': {
+        EncodingFormat.REG_REG: instruction_table['DIVR'],
+        EncodingFormat.REG_IMM: instruction_table['DIVI'],
+    },
+    # Bit ops
+    'AND': {
+        EncodingFormat.REG_REG: instruction_table['ANDR'],
+        EncodingFormat.REG_IMM: instruction_table['ANDI'],
+    },
+    'OR': {
+        EncodingFormat.REG_REG: instruction_table['ORR'],
+        EncodingFormat.REG_IMM: instruction_table['ORI'],
+    },
+    'XOR': {
+        EncodingFormat.REG_REG: instruction_table['XORR'],
+        EncodingFormat.REG_IMM: instruction_table['XORI'],
+    },
 }
 
 class TokenTypes:
@@ -166,7 +269,7 @@ class ExprTypes:
 
 @dataclass
 class InstructionPayload:
-    mnemonic: str
+    spec: InstructionSpec
     operands: list[str]
 
 class Record:
@@ -232,12 +335,18 @@ def parse_register(value: str):
 
 def parse_operand(string):
     # indirect handling
-    # todo
+    if string.startswith('[') and string.endswith(']'):
+        string = string[1:-1].strip()
+        if is_register(string):
+            return OperandMemReg(parse_register(string))
+        else: 
+            return OperandMemImm(tokenize_expr(string))
     # register handling
     if is_register(string):
         return OperandReg(parse_register(string))
     # immediate handling
-    return OperandImm(tokenize_expr(string))
+    else:
+        return OperandImm(tokenize_expr(string))
         
 
 
@@ -421,10 +530,8 @@ def check_expr(tokens):
     return ExprTypes.ILLEGAL
 
 def encode_instruction(record, verbose=False):
-    opcode_info = instruction_table[record.payload.mnemonic]
-    opcode = opcode_info.opcode
-    format = opcode_info.format
-
+    opcode = record.payload.spec.opcode
+    format = record.payload.spec.format
     operands = record.payload.operands
 
     record.encoded_bytes.append(opcode)
@@ -436,7 +543,7 @@ def encode_instruction(record, verbose=False):
             reg_byte = reg1 << 4
             record.encoded_bytes.append(reg_byte)
 
-        case EncodingFormat.REG_REG:            
+        case EncodingFormat.REG_REG | EncodingFormat.REG_MEMREG:            
             reg1 = operands[0].reg
             reg2 = operands[1].reg
 
@@ -464,7 +571,7 @@ def encode_instruction(record, verbose=False):
                 case ExprTypes.EXTERN_CONST:
                     raise ValueError("Offset not yet implemented.")
 
-        case EncodingFormat.REG_IMM:            
+        case EncodingFormat.REG_IMM | EncodingFormat.REG_MEMIMM:            
             reg1 = operands[0].reg
             reg_byte = reg1 << 4
             record.encoded_bytes.append(reg_byte)
@@ -489,7 +596,7 @@ def encode_instruction(record, verbose=False):
                 case ExprTypes.EXTERN_CONST:
                     raise ValueError("Offset not yet implemented.")
         case _:
-            raise ValueError("Unknown encoding format!")
+            raise ValueError(f"Unknown encoding format: {format}")
 
 def encode_data_bytes(record, verbose=False):
     values = record.payload['values']
@@ -515,7 +622,7 @@ def generate_listing(records):
             
         match record.type:
             case RecordTypes.INSTRUCTION:       
-                mnemonic = record.payload.mnemonic
+                mnemonic = record.payload.spec.mnemonic
                 operands = ', '.join(str(op) for op in record.payload.operands)
                 text_col = f"{mnemonic} {operands}"
                 pass
@@ -589,6 +696,14 @@ def generate_object_listing(object):
                 lines.append(f"E | {record.entry_point:<10}")
     listing = '\n'.join(lines)
     return listing
+
+def match_format(formats, operands):
+    for fmt in formats.items():
+        # print(fmt[1].operand_types)
+        if len(fmt[1].operand_types) == len(operands):
+            if all(isinstance(op, t) for op, t in zip(operands, fmt[1].operand_types)):
+                return fmt
+    raise ValueError("No matching format!")
 
 labels = {}
 macros = {}
@@ -668,18 +783,42 @@ def main():
                     exports.append(ident)
                 case _:
                     # if instruction
-                    if instruction in instruction_table:
+                    if instruction in pattern_table:
                         operands = []
                         if rest:
                             operand_strings = [op.strip() for op in rest[0].split(',')]
                             operands = [parse_operand(op) for op in operand_strings]
-                        opcode = instruction_table[instruction]
-                        size = FORMAT_LENGTHS[opcode.format]
+                        print(operands)
+                        print(instruction)
+                        print(pattern_table[instruction])
+
+                        fmt = match_format(FORMAT_SPECS, operands)
+
+                        if fmt[0] in pattern_table[instruction]:
+                            instr_spec = pattern_table[instruction][fmt[0]]
+                            print('found opcode: ', instr_spec)
+                        else:
+                            raise ValueError('Wrong format for instruction!')
+                        size = fmt[1].length
                         records.append(Record(
                             RecordTypes.INSTRUCTION, 
                             cur_address, 
                             size, 
-                            InstructionPayload(instruction, operands)
+                            InstructionPayload(instr_spec, operands)
+                            ))
+                        cur_address += size    
+                    elif instruction in instruction_table:
+                        operands = []
+                        if rest:
+                            operand_strings = [op.strip() for op in rest[0].split(',')]
+                            operands = [parse_operand(op) for op in operand_strings]
+                        instr_spec = instruction_table[instruction]
+                        size = FORMAT_SPECS[instr_spec.format].length
+                        records.append(Record(
+                            RecordTypes.INSTRUCTION, 
+                            cur_address, 
+                            size, 
+                            InstructionPayload(instr_spec, operands)
                             ))
                         cur_address += size                    
                     else:
