@@ -54,7 +54,9 @@ Byte 3-4: [16 bits: immediate or address]
 - Imm - immediate operand or address
 - Reg - register operand (R0-R15)
 
-## Control Flow
+## Opcode Table
+
+### Control Flow
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -70,7 +72,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [CALL](#call)      | Save PC to stack and jump            | 0x09   |
 | [RET](#ret)        | Retrieve PC from stack               | 0x0A   |
 
-## Memory
+### Memory
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -83,7 +85,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [STORB](#storb)    | Stores byte from src in memory       | 0x19   |
 | [LOADB](#loadb)    | Loads byte from memory to dst        | 0x1B   |
 
-## Arithmetics
+### Arithmetics
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -98,7 +100,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [DIVR](#divr)      | Divides R by R                       | 0x28   |
 | [DIVI](#divi)      | Divides R by I                       | 0x29   |
 
-## Bit ops
+### Bit ops
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -112,7 +114,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [SHR](#shr)        | Shift right                          | 0x37   |
 | [SHL](#shl)        | Shift left                           | 0x38   |
 
-## SP and BP ops
+### SP and BP ops
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -125,7 +127,9 @@ Byte 3-4: [16 bits: immediate or address]
 | [ADDBP](#addbp)    | Add BP                               | 0x46   |
 | [SUBBP](#subbp)    | Subtract BP                          | 0x47   |
 
-## NOP
+## Opcodes
+
+### NOP
 
 **Description:**
 
@@ -148,7 +152,7 @@ None
 
 NOP
 
-## HLT
+### HLT
 
 **Description:**
 
@@ -170,7 +174,7 @@ None
 
 HLT
 
-## CMPR
+### CMPR
 
 CMPR reg1, reg2
 
@@ -204,7 +208,7 @@ Z, C, S
 
 CMPR R0, R1
 
-## CMPI
+### CMPI
 
 CMPI reg1, imm
 
@@ -239,7 +243,7 @@ Z, C, S
 
 CMPI R0, 10
 
-## JMP
+### JMP
 
 JMP imm
 
@@ -270,7 +274,7 @@ None
 
 JMP label
 
-## JZ
+### JZ
 
 JZ imm
 
@@ -302,7 +306,7 @@ None
 
 JZ label
 
-## JNZ
+### JNZ
 
 JNZ imm
 
@@ -334,7 +338,7 @@ None
 
 JNZ label
 
-## JC
+### JC
 
 JC imm
 
@@ -366,7 +370,7 @@ None
 
 JC label
 
-## JS
+### JS
 
 JS imm
 
@@ -398,7 +402,7 @@ None
 
 JS label
 
-## CALL
+### CALL
 
 CALL imm
 
@@ -430,7 +434,7 @@ None
 
 CALL label
 
-## RET
+### RET
 
 RET
 
