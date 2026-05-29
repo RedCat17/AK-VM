@@ -131,64 +131,41 @@ Byte 3-4: [16 bits: immediate or address]
 
 ### NOP
 
-**Description:**
-
-No operation. Does nothing.
+**Description:** No operation. Does nothing.
 
 **Encoding:**
 ```
 byte1: 0x00
 ```
 
-**Operands:**
+**Operands:** None
 
-None
+**Flags affected:** None
 
-**Flags affected:**
-
-None
-
-**Example:** 
-
-NOP
+**Example:** `NOP`
 
 ### HLT
 
-**Description:**
-
-Stop execution, halt VM.
+**Description:** Stop execution, halt VM.
 
 **Encoding:**
 ```
 byte1: 0x01
 ```
 
-**Operands:**
-- None
+**Operands:** None
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-HLT
+**Example:** `HLT`
 
 ### CMPR
 
 CMPR reg1, reg2
 
-**Description:**
+**Description:** Compare 2 registers and set flags.
 
-Compare 2 registers and set flags.
-
-**Operation:**
-
-```
-Z = reg1 - reg2 == 0:
-S = (reg1 - reg2) & 0x8000
-C = reg < reg2
-```
+**Operation:** `Z ← (reg1 - reg2 == 0), S ← (reg1 - reg2) & 0x8000, C ← (reg < reg2)`
 
 **Encoding:**
 ```
@@ -196,33 +173,19 @@ byte1: 0x02
 byte2: reg1 | reg2
 ```
 
-**Operands:**
-- reg1
-- reg2
+**Operands:** reg1, reg2
 
-**Flags affected:**
+**Flags affected:** Z, C, S
 
-Z, C, S
-
-**Example:** 
-
-CMPR R0, R1
+**Example:** `CMPR R0, R1`
 
 ### CMPI
 
 CMPI reg1, imm
 
-**Description:**
+**Description:** Compare register with immediate value and set flags.
 
-Compare register with immediate value and set flags.
-
-**Operation:**
-
-```
-Z = reg1 - imm == 0:
-S = (reg1 - imm) & 0x8000
-C = reg < imm
-```
+**Operation:** `Z ← (reg1 - reg2 == 0), S ← (reg1 - reg2) & 0x8000, C ← (reg < reg2)`
 
 **Encoding:**
 ```
@@ -231,31 +194,19 @@ byte2: reg1 | 0000
 byte3, byte4: imm
 ```
 
-**Operands:**
-- reg1
-- imm
+**Operands:** reg1, imm
 
-**Flags affected:**
+**Flags affected:** Z, C, S
 
-Z, C, S
-
-**Example:** 
-
-CMPI R0, 10
+**Example:** `CMPI R0, 10`
 
 ### JMP
 
 JMP imm
 
-**Description:**
+**Description:** Uncoditional jump to address. Sets PC to imm.
 
-Uncoditional jump to address. Sets PC to imm.
-
-**Operation:**
-
-```
-PC = imm
-```
+**Operation:** `PC ← imm`
 
 **Encoding:**
 ```
@@ -263,31 +214,19 @@ byte1: 0x04
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-JMP label
+**Example:** `JMP label`
 
 ### JZ
 
 JZ imm
 
-**Description:**
+**Description:** Jump to address if Zero flag is set. Sets PC to imm.
 
-Jump to address if Zero flag is set. Sets PC to imm.
-
-**Operation:**
-
-```
-if Zero:
-    PC = imm
-```
+**Operation:** `PC ← imm if Z`
 
 **Encoding:**
 ```
@@ -295,31 +234,19 @@ byte1: 0x05
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-JZ label
+**Example:** `JZ label`
 
 ### JNZ
 
 JNZ imm
 
-**Description:**
+**Description:** Jump to address if Zero flag is not set. Sets PC to imm.
 
-Jump to address if Zero flag is not set. Sets PC to imm.
-
-**Operation:**
-
-```
-if !Zero:
-    PC = imm
-```
+**Operation:** `PC ← imm if !Z`
 
 **Encoding:**
 ```
@@ -327,16 +254,11 @@ byte1: 0x06
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-JNZ label
+**Example:** `JNZ label`
 
 ### JC
 
@@ -346,12 +268,8 @@ JC imm
 
 Jump to address if Carry flag is set. Sets PC to imm.
 
-**Operation:**
+**Operation:** `PC ← imm if C`
 
-```
-if Carry:
-    PC = imm
-```
 
 **Encoding:**
 ```
@@ -359,31 +277,19 @@ byte1: 0x07
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-JC label
+**Example:** `JC label`
 
 ### JS
 
 JS imm
 
-**Description:**
+**Description:** Jump to address if Sign flag is set. Sets PC to imm.
 
-Jump to address if Sign flag is set. Sets PC to imm.
-
-**Operation:**
-
-```
-if Sign:
-    PC = imm
-```
+**Operation:** `PC ← imm if S`
 
 **Encoding:**
 ```
@@ -391,31 +297,19 @@ byte1: 0x08
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-JS label
+**Example:** `JS label`
 
 ### CALL
 
 CALL imm
 
-**Description:**
+**Description:** Call function. Jump to address and push PC to stack.
 
-Call function. Jump to address and push PC to stack.
-
-**Operation:**
-
-```
-push PC
-PC = imm
-```
+**Operation:** `push PC, PC ← imm`
 
 **Encoding:**
 ```
@@ -423,40 +317,25 @@ byte1: 0x09
 byte2, byte3: imm
 ```
 
-**Operands:**
-- imm
+**Operands:** imm
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-CALL label
+**Example:** `CALL label`
 
 ### RET
 
 RET
 
-**Description:**
+**Description:** Return from function. Pop PC from stack.
 
-Return from function. Pop PC from stack.
-
-**Operation:**
-
-```
-pop PC
-```
+**Operation:** `pop PC`
 
 **Encoding:**
 ```
 byte1: 0x0A
 ```
 
-**Flags affected:**
+**Flags affected:** None
 
-None
-
-**Example:** 
-
-RET
+**Example:** `RET`
