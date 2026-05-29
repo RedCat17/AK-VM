@@ -61,8 +61,8 @@ instruction_table = {
     'JMP': InstructionSpec(mnemonic='JMP', opcode=0x04, format=EncodingFormat.IMM),
     'JMZ': InstructionSpec(mnemonic='JMZ', opcode=0x05, format=EncodingFormat.IMM),
     'JNZ': InstructionSpec(mnemonic='JNZ', opcode=0x06, format=EncodingFormat.IMM),
-    'JMC': InstructionSpec(mnemonic='JMC', opcode=0x07, format=EncodingFormat.IMM),
-    'JMS': InstructionSpec(mnemonic='JMS', opcode=0x08, format=EncodingFormat.IMM),
+    'JC': InstructionSpec(mnemonic='JC', opcode=0x07, format=EncodingFormat.IMM),
+    'JS': InstructionSpec(mnemonic='JS', opcode=0x08, format=EncodingFormat.IMM),
     'CALL': InstructionSpec(mnemonic='CALL', opcode=0x09, format=EncodingFormat.IMM),
     'RET': InstructionSpec(mnemonic='RET', opcode=0x0A, format=EncodingFormat.NONE),
 

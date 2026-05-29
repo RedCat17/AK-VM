@@ -65,8 +65,8 @@ Byte 3-4: [16 bits: immediate or address]
 | [JMP](#jmp)        | Unconditional jump                   | 0x04   |
 | [JZ](#jz)          | Jump if Z flag is set                | 0x05   |
 | [JNZ](#jnz)        | Jump if not Z                        | 0x06   |
-| [JMC](#jmc)        | Jump if C                            | 0x07   |
-| [JMS](#jms)        | Jump if S                            | 0x08   |
+| [JC](#jc)          | Jump if C                            | 0x07   |
+| [JS](#js)          | Jump if S                            | 0x08   |
 | [CALL](#call)      | Save PC to stack and jump            | 0x09   |
 | [RET](#ret)        | Retrieve PC from stack               | 0x0A   |
 
@@ -96,7 +96,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [MULR](#mulr)      | Multiplies R by R                    | 0x26   |
 | [MULI](#muli)      | Multiplies R by I                    | 0x27   |
 | [DIVR](#divr)      | Divides R by R                       | 0x28   |
-| [DIVI](#divi)      | Divides R by   I                     | 0x29   |
+| [DIVI](#divi)      | Divides R by I                       | 0x29   |
 
 ## Bit ops
 
@@ -178,6 +178,14 @@ CMPR reg1, reg2
 
 Compare 2 registers and set flags.
 
+**Operation:**
+
+```
+Z = reg1 - reg2 == 0:
+S = (reg1 - reg2) & 0x8000
+C = reg < reg2
+```
+
 **Encoding:**
 ```
 byte1: 0x02
@@ -204,6 +212,14 @@ CMPI reg1, imm
 
 Compare register with immediate value and set flags.
 
+**Operation:**
+
+```
+Z = reg1 - imm == 0:
+S = (reg1 - imm) & 0x8000
+C = reg < imm
+```
+
 **Encoding:**
 ```
 byte1: 0x03
@@ -222,3 +238,221 @@ Z, C, S
 **Example:** 
 
 CMPI R0, 10
+
+## JMP
+
+JMP imm
+
+**Description:**
+
+Uncoditional jump to address. Sets PC to imm.
+
+**Operation:**
+
+```
+PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x04
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+JMP label
+
+## JZ
+
+JZ imm
+
+**Description:**
+
+Jump to address if Zero flag is set. Sets PC to imm.
+
+**Operation:**
+
+```
+if Zero:
+    PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x05
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+JZ label
+
+## JNZ
+
+JNZ imm
+
+**Description:**
+
+Jump to address if Zero flag is not set. Sets PC to imm.
+
+**Operation:**
+
+```
+if !Zero:
+    PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x06
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+JNZ label
+
+## JC
+
+JC imm
+
+**Description:**
+
+Jump to address if Carry flag is set. Sets PC to imm.
+
+**Operation:**
+
+```
+if Carry:
+    PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x07
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+JC label
+
+## JS
+
+JS imm
+
+**Description:**
+
+Jump to address if Sign flag is set. Sets PC to imm.
+
+**Operation:**
+
+```
+if Sign:
+    PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x08
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+JS label
+
+## CALL
+
+CALL imm
+
+**Description:**
+
+Call function. Jump to address and push PC to stack.
+
+**Operation:**
+
+```
+push PC
+PC = imm
+```
+
+**Encoding:**
+```
+byte1: 0x09
+byte2, byte3: imm
+```
+
+**Operands:**
+- imm
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+CALL label
+
+## RET
+
+RET
+
+**Description:**
+
+Return from function. Pop PC from stack.
+
+**Operation:**
+
+```
+pop PC
+```
+
+**Encoding:**
+```
+byte1: 0x0A
+```
+
+**Flags affected:**
+
+None
+
+**Example:** 
+
+RET

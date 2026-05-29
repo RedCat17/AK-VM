@@ -33,8 +33,8 @@
 #define OPCODE_JMP     0x04
 #define OPCODE_JMZ     0x05
 #define OPCODE_JNZ     0x06
-#define OPCODE_JMC     0x07
-#define OPCODE_JMS     0x08
+#define OPCODE_JC     0x07
+#define OPCODE_JS     0x08
 #define OPCODE_CALL    0x09
 #define OPCODE_RET     0x0A
 
@@ -112,8 +112,8 @@ OpcodeData opcode_table[256] = {
     [OPCODE_JMP]   = {"JMP",   FORMAT_IMM},
     [OPCODE_JMZ]   = {"JMZ",   FORMAT_IMM},
     [OPCODE_JNZ]   = {"JNZ",   FORMAT_IMM},
-    [OPCODE_JMC]   = {"JMC",   FORMAT_IMM},
-    [OPCODE_JMS]   = {"JMS",   FORMAT_IMM},
+    [OPCODE_JC]   = {"JC",   FORMAT_IMM},
+    [OPCODE_JS]   = {"JS",   FORMAT_IMM},
     [OPCODE_CALL]  = {"CALL",  FORMAT_IMM},
     [OPCODE_RET]   = {"RET",   FORMAT_NONE},
     // Memory
@@ -462,15 +462,15 @@ void run_vm(VM *vm) {
                     vm->cpu.pc = value;
                 }
                 break;
-            case OPCODE_JMC: 
-                fprintf(stderr, "JMC adr %X\n", value);
+            case OPCODE_JC: 
+                fprintf(stderr, "JC adr %X\n", value);
                 if (vm->cpu.flags & CARRY_FLAG) {
                     fprintf(stderr, "jumped\n");
                     vm->cpu.pc = value;
                 }
                 break;
-            case OPCODE_JMS: 
-                fprintf(stderr, "JMC adr %X\n", value);
+            case OPCODE_JS: 
+                fprintf(stderr, "JC adr %X\n", value);
                 if (vm->cpu.flags & SIGN_FLAG) {
                     fprintf(stderr, "jumped\n");
                     vm->cpu.pc = value;
