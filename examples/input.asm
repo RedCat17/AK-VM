@@ -7,37 +7,37 @@ msg2:
 .STR "You entered: "
 
 start:
-MOVI R0, msg1
+MOV R0, msg1
 
 msg_loop_1:
-LOADBRM R1, R0
-STORBDR R1, 0xF801
+LOADB R1, [R0]
+STORB R1, [0xF801]
 INC R0
-CMPI R0, msg2
+CMP R0, msg2
 JNZ msg_loop_1
 
-MOVI R0, 0x4000
+MOV R0, 0x4000
 input_loop:
-LOADBRD R1, 0xF800
-STORBMR R0, R1
+LOADB R1, [0xF800]
+STORB R0, [R1]
 INC R0
-CMPI R1, 10
+CMP R1, 10
 JNZ input_loop
 
-MOVI R0, msg2
+MOV R0, msg2
 msg_loop_2:
-LOADBRM R1, R0
-STORBDR R1, 0xF801
+LOADB R1, [R0]
+STORB R1, [0xF801]
 INC R0
-CMPI R0, start
+CMP R0, start
 JNZ msg_loop_2
 
-MOVI R0, 0x4000
+MOV R0, 0x4000
 output_loop:
-LOADBRM R1, R0
-STORBDR R1, 0xF801
+LOADB R1, [R0]
+STORB R1, [0xF801]
 INC R0
-CMPI R1, 10
+CMP R1, 10
 JNZ output_loop
 
 HLT
