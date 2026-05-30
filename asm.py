@@ -178,6 +178,15 @@ pattern_table = {
         EncodingFormat.REG_REG: instruction_table['MOVR'],
         EncodingFormat.REG_IMM: instruction_table['MOVI'],
     },
+    'STOR': {
+        EncodingFormat.REG_MEMIMM: instruction_table['STORDR'],
+        EncodingFormat.REG_IMM: instruction_table['STORMI'],
+        EncodingFormat.REG_MEMREG: instruction_table['STORMR'],
+    },
+    'LOAD': {
+        EncodingFormat.REG_MEMIMM: instruction_table['LOADRD'],
+        EncodingFormat.REG_MEMREG: instruction_table['LOADRM'],
+    },
     'STORB': {
         EncodingFormat.REG_MEMIMM: instruction_table['STORBDR'],
         EncodingFormat.REG_IMM: instruction_table['STORBMI'],
