@@ -8,26 +8,42 @@ The goal of the project is to learn how computers actually work on the lowest le
 
 All code is human-written.
 
-## Features:
+Licensed under MIT.
+
+## Features
+
+### VM:
 - 16-bit VM
 - custom ISA
-- assembler
-    - labels
-    - expressions
-    - constants
 - console I/O
 - variable-length encoding
+### Assembler:
+- labels
+- expressions evaluation
+- constants (e.g. .DEF A 0x040)
+- named registers (e.g. R0)
+- pattern matching based on operands (e.g. MOV -> MOVR or MOVI)
 - object files
 
-## Usage:
-Compilation:
+## Prerequisites 
+- C compiler (Clang or other)
+- Python 3.6+
+
+## Building
 ```
-clang akvm.c -o build/akvm -Wall -Wextra -O3
+git clone https://github.com/RedCat17/AK-VM.git
+cd AK-VM
+clang akvm.c -o build/akvm -Wall -Wextra
 ```
 
+## Usage
 Assembling program.asm into output.bin binary:
 ```
-python assembler.py program.asm -o output.bin -f bin
+python asm.py program.asm -o output.bin -f bin
+```
+Assembling object file:
+```
+python asm.py program.asm -o output.bin -f obj
 ```
 
 Running output.bin:
@@ -37,7 +53,7 @@ Running output.bin:
 
 Redirecting debug output to file:
 ```
-./akvm program.bin 2> output.txt
+./build/akvm program.bin 2> output.txt
 ```
 
 ## Code example
