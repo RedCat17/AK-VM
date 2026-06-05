@@ -52,6 +52,11 @@ Running output.bin:
 ./build/akvm output.bin
 ```
 
+Debug mode:
+```
+./build/akvm program.bin -d
+```
+
 Redirecting debug output to file:
 ```
 ./build/akvm program.bin -d 2> output.txt
@@ -89,4 +94,3 @@ See:
 - [ISA](docs/isa.md)
 - [Machine](docs/machine.md)
 - [Assembler](docs/assembler.md)
-- [Linker](docs/linker.md)
