@@ -353,7 +353,10 @@ def is_register(value: str):
     return True
 
 def parse_register(value: str):
-    return int(value[1:])
+    r = int(value[1:])
+    if r < 0 or r > 15:
+        raise ValueError("Invalid register! Only R0-R15 are allowed.")
+    return r
 
 def parse_operand(string):
     # indirect handling
