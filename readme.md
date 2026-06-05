@@ -23,6 +23,7 @@ Licensed under MIT.
 - constants (e.g. .DEF A 0x040)
 - named registers (e.g. R0)
 - pattern matching based on operands (e.g. MOV -> MOVR or MOVI)
+- detailed error handling with line numbers
 - object files
 
 ## Prerequisites 
