@@ -582,6 +582,8 @@ def encode_instruction(record, verbose=False):
                     raise ValueError("Illegal expression.")
                 case ExprTypes.LOCAL:
                     value = recursive_eval(tokens)
+                    if value < 0 or value > 65535:
+                        raise ValueError("Invalid value! Only 0-65535 are allowed.")
 
                     lower = value & LOWER_BYTE
                     higher = (value & HIGHER_BYTE) >> 8
@@ -607,6 +609,8 @@ def encode_instruction(record, verbose=False):
                     raise ValueError("Illegal expression.")
                 case ExprTypes.LOCAL:
                     value = recursive_eval(tokens2)
+                    if value < 0 or value > 65535:
+                        raise ValueError("Invalid value! Only 0-65535 are allowed.")
 
                     lower = value & LOWER_BYTE
                     higher = (value & HIGHER_BYTE) >> 8
