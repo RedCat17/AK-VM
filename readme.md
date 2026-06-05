@@ -54,7 +54,7 @@ Running output.bin:
 
 Redirecting debug output to file:
 ```
-./build/akvm program.bin 2> output.txt
+./build/akvm program.bin -d 2> output.txt
 ```
 
 Quick example for Hello World:
