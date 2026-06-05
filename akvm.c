@@ -1,3 +1,4 @@
+#include <raylib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -176,6 +177,8 @@ typedef struct {
 typedef struct {
     CPU cpu;
     uint8_t memory[MEMORY_SIZE]; // 64 KB RAM
+
+    uint8_t debug; // 0 - quiet, 1 - verbose
 } VM;
 
 // initialize CPU, set all registers to zero
@@ -191,6 +194,8 @@ void init_cpu(CPU *cpu) {
 void init_vm(VM *vm) {
     init_cpu(&vm->cpu);
     memset(vm->memory, 0, sizeof(vm->memory));
+
+    vm->debug = 0;
 }
 
 // Opens program from file and executes it byte-by-byte
@@ -325,7 +330,9 @@ int exec_stor(VM *vm, uint16_t address, uint16_t value) {
             fprintf(stderr, "Can't print > 1 byte!");
             return -1;
         }
-        fprintf(stderr, "Printing %c (ASCII %d)\n", value, value);
+        if (vm->debug) {
+            fprintf(stderr, "Printing %c (ASCII %d)\n", value, value);
+        }
         putchar(value);
     } else {
     vm->memory[address] = value & 0x00FF;
@@ -353,7 +360,9 @@ int exec_storb(VM *vm, uint16_t address, uint8_t value) {
         return -1;
     }
     if (address == TX_ADDRESS) {
-        fprintf(stderr, "Printing %c (ASCII %d)\n", value, value);
+        if (vm->debug) {
+            fprintf(stderr, "Printing %c (ASCII %d)\n", value, value);
+        }
         putchar(value);
     } else {
     vm->memory[address] = value & 0x00FF;
@@ -441,243 +450,359 @@ void run_vm(VM *vm) {
                 value = vm->memory[vm->cpu.pc++] | (vm->memory[vm->cpu.pc++] << 8);
                 break;
         }
-        fprintf(stderr, "opcode: 0x%02X; reg1: %d; reg2: %d; value: %d\n", opcode, reg1, reg2, value);
+
+        if (vm->debug) {
+            fprintf(stderr, "opcode: 0x%02X; reg1: %d; reg2: %d; value: %d\n", opcode, reg1, reg2, value);
+        }
+        
         switch (opcode) {
             // Control flow
             case OPCODE_NOP: 
-                fprintf(stderr, "NOP...\n");
+                if (vm->debug) {
+                    fprintf(stderr, "NOP...\n");
+                }
                 break;
             case OPCODE_HLT: 
-                fprintf(stderr, "Halting.\n");
+                if (vm->debug) {
+                    fprintf(stderr, "HLT.\n");
+                }
                 return;
             case OPCODE_CMPR: 
-                fprintf(stderr, "CMP reg %d reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "CMP reg %d reg %d\n", reg1, reg2);
+                }
                 cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
             case OPCODE_CMPI: 
-                fprintf(stderr, "CMP reg %d imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "CMP reg %d imm %d\n", reg1, value);
+                }
                 cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 break;
             case OPCODE_JMP: 
-                fprintf(stderr, "JMP adr %X\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "JMP adr %X\n", value);
+                }
                 vm->cpu.pc = value;
                 break;
             case OPCODE_JMZ: 
-                fprintf(stderr, "JMZ adr %X\n", value);
-                if (vm->cpu.flags & ZERO_FLAG) {
-                    fprintf(stderr, "jumped\n");
+                if (vm->debug) {
+                    fprintf(stderr, "JMZ adr %X\n", value);
+                }
+                if (vm->cpu.flags & ZERO_FLAG) {                    
+                    if (vm->debug) {
+                        fprintf(stderr, "jumped\n");
+                    }
                     vm->cpu.pc = value;
                 }
                 break;
             case OPCODE_JNZ: 
-                fprintf(stderr, "JNZ adr %X\n", value);
-                if (!(vm->cpu.flags & ZERO_FLAG)) {
-                    fprintf(stderr, "jumped\n");
+                if (vm->debug) {
+                    fprintf(stderr, "JNZ adr %X\n", value);
+                }
+                if (!(vm->cpu.flags & ZERO_FLAG)) {                 
+                    if (vm->debug) {
+                        fprintf(stderr, "jumped\n");
+                    }
                     vm->cpu.pc = value;
                 }
                 break;
             case OPCODE_JC: 
-                fprintf(stderr, "JC adr %X\n", value);
-                if (vm->cpu.flags & CARRY_FLAG) {
-                    fprintf(stderr, "jumped\n");
+                if (vm->debug) {
+                    fprintf(stderr, "JC adr %X\n", value);
+                }
+                if (vm->cpu.flags & CARRY_FLAG) {                 
+                    if (vm->debug) {
+                        fprintf(stderr, "jumped\n");
+                    }
                     vm->cpu.pc = value;
                 }
                 break;
             case OPCODE_JS: 
-                fprintf(stderr, "JC adr %X\n", value);
-                if (vm->cpu.flags & SIGN_FLAG) {
-                    fprintf(stderr, "jumped\n");
+                if (vm->debug) {
+                    fprintf(stderr, "JC adr %X\n", value);
+                }
+                if (vm->cpu.flags & SIGN_FLAG) {                 
+                    if (vm->debug) {
+                        fprintf(stderr, "jumped\n");
+                    }
                     vm->cpu.pc = value;
                 }
                 break;
             case OPCODE_CALL: 
-                fprintf(stderr, "CALL adr %X\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "CALL adr %X\n", value);
+                }
                 exec_call(vm, value);
                 break;
             case OPCODE_RET: 
-                fprintf(stderr, "RET\n");
+                if (vm->debug) {
+                    fprintf(stderr, "RET\n");
+                }
                 exec_ret(vm);
                 break;
 
             // Memory
             case OPCODE_MOVR: 
-                fprintf(stderr, "MOV reg %d <- reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV reg %d <- reg %d\n", reg1, reg2);
+                }
                 vm->cpu.registers[reg1] = vm->cpu.registers[reg2];
                 break;
             case OPCODE_MOVI: 
-                fprintf(stderr, "MOV reg %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV reg %d <- imm %d\n", reg1, value);
+                }
                 vm->cpu.registers[reg1] = value;
                 break;
             case OPCODE_STORDR: 
-                fprintf(stderr, "STOR adr %X <- reg %d\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "STOR adr %X <- reg %d\n", value, reg1);
+                }
                 exec_stor(vm, value, vm->cpu.registers[reg1]);
                 break;
             case OPCODE_STORMI: 
-                fprintf(stderr, "STOR ind %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "STOR ind %d <- imm %d\n", reg1, value);
+                }
                 exec_stor(vm, vm->cpu.registers[reg1], value);
                 break;
             case OPCODE_STORMR: 
-                fprintf(stderr, "STOR ind %d <- reg2 %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "STOR ind %d <- reg2 %d\n", reg1, reg2);
+                }
                 exec_stor(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
             case OPCODE_LOADRD: 
-                fprintf(stderr, "LOAD reg %d <- adr %X\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "LOAD reg %d <- adr %X\n", value, reg1);
+                }
                 exec_load(vm, reg1, value);
                 break;
             case OPCODE_LOADRM: 
-                fprintf(stderr, "LOAD reg %d <- ind %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "LOAD reg %d <- ind %d\n", reg1, reg2);
+                }
                 exec_load(vm, reg1, vm->cpu.registers[reg2]);
                 break;
             case OPCODE_PUSH: 
-                fprintf(stderr, "PUSH reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "PUSH reg %d\n", reg1);
+                }
                 exec_push(vm, vm->cpu.registers[reg1]);
                 break;
             case OPCODE_POP: 
-                fprintf(stderr, "POP to reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "POP to reg %d\n", reg1);
+                }
                 exec_pop(vm, reg1);
                 break;
             case OPCODE_STORBDR: 
-                fprintf(stderr, "STORB adr %X <- reg %d\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "STORB adr %X <- reg %d\n", value, reg1);
+                }
                 exec_storb(vm, value, vm->cpu.registers[reg1]);
                 break;
             case OPCODE_STORBMI: 
-                fprintf(stderr, "STORB ind %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "STORB ind %d <- imm %d\n", reg1, value);
+                }
                 exec_storb(vm, vm->cpu.registers[reg1], value);
                 break;
             case OPCODE_STORBMR: 
-                fprintf(stderr, "STORB ind %d <- reg2 %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "STORB ind %d <- reg2 %d\n", reg1, reg2);
+                }
                 exec_storb(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 break;
             case OPCODE_LOADBRD: 
-                fprintf(stderr, "LOADB reg %d <- adr %X\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "LOADB reg %d <- adr %X\n", value, reg1);
+                }
                 exec_loadb(vm, reg1, value);
                 break;
             case OPCODE_LOADBRM: 
-                fprintf(stderr, "LOADB reg %d <- ind %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "LOADB reg %d <- ind %d\n", reg1, reg2);
+                }
                 exec_loadb(vm, reg1, vm->cpu.registers[reg2]);
                 break;
 
             // Arithmetics
             case OPCODE_ADDR: 
-                fprintf(stderr, "ADD reg %d <- reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "ADD reg %d <- reg %d\n", reg1, reg2);
+                }
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_ADDI: 
-                fprintf(stderr, "ADD reg %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "ADD reg %d <- imm %d\n", reg1, value);
+                }
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_SUBR: 
-                fprintf(stderr, "SUB reg %d <- reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "SUB reg %d <- reg %d\n", reg1, reg2);
+                }
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_SUBI: 
-                fprintf(stderr, "SUB reg %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "SUB reg %d <- imm %d\n", reg1, value);
+                }
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_INC: 
-                fprintf(stderr, "INC reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "INC reg %d\n", reg1);
+                }
                 result = cpu_add(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DEC: 
-                fprintf(stderr, "DEC reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "DEC reg %d\n", reg1);
+                }
                 result = cpu_sub(&vm->cpu, vm->cpu.registers[reg1], 1);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_MULR: 
-                fprintf(stderr, "MUL reg %d <- reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "MUL reg %d <- reg %d\n", reg1, reg2);
+                }
                 result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_MULI: 
-                fprintf(stderr, "MUL reg %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "MUL reg %d <- imm %d\n", reg1, value);
+                }
                 result = cpu_mul(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DIVR: 
-                fprintf(stderr, "DIV reg %d <- reg %d\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "DIV reg %d <- reg %d\n", reg1, reg2);
+                }
                 result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
                 vm->cpu.registers[reg1] = result;
                 break;
             case OPCODE_DIVI: 
-                fprintf(stderr, "DIV reg %d <- imm %d\n", reg1, value);
+                if (vm->debug) {
+                    fprintf(stderr, "DIV reg %d <- imm %d\n", reg1, value);
+                }
                 result = cpu_div(&vm->cpu, vm->cpu.registers[reg1], value);
                 vm->cpu.registers[reg1] = result;
                 break;
 
             // Bit ops
             case OPCODE_ANDR:
-                fprintf(stderr, "AND reg %d reg %d.\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "AND reg %d reg %d.\n", reg1, reg2);
+                }
                 vm->cpu.registers[reg1] &= vm->cpu.registers[reg2];
                 break;
             case OPCODE_ANDI: 
-                fprintf(stderr, "AND reg %d imm %d.\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "AND reg %d imm %d.\n", value, reg1);
+                }
                 vm->cpu.registers[reg1] &= value;
                 break;
             case OPCODE_ORR: 
-                fprintf(stderr, "OR reg %d reg %d.\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "OR reg %d reg %d.\n", reg1, reg2);
+                }
                 vm->cpu.registers[reg1] |= vm->cpu.registers[reg2];
                 break;
             case OPCODE_ORI: 
-                fprintf(stderr, "OR reg %d imm %d.\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "OR reg %d imm %d.\n", value, reg1);
+                }
                 vm->cpu.registers[reg1] |= value;
                 break;
             case OPCODE_XORR: 
-                fprintf(stderr, "XOR reg %d reg %d.\n", reg1, reg2);
+                if (vm->debug) {
+                    fprintf(stderr, "XOR reg %d reg %d.\n", reg1, reg2);
+                }
                 vm->cpu.registers[reg1] ^= vm->cpu.registers[reg2];
                 break;
             case OPCODE_XORI: 
-                fprintf(stderr, "XOR reg %d imm %d.\n", value, reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "XOR reg %d imm %d.\n", value, reg1);
+                }
                 vm->cpu.registers[reg1] ^= value;
                 break;
             case OPCODE_NOT: 
-                fprintf(stderr, "NOT reg %d.\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "NOT reg %d.\n", reg1);
+                }
                 vm->cpu.registers[reg1] = ~vm->cpu.registers[reg1];
                 break;
             case OPCODE_SHR: 
-                fprintf(stderr, "SHR reg %d.\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "SHR reg %d.\n", reg1);
+                }
                 vm->cpu.registers[reg1] >>= 1;
                 break;
             case OPCODE_SHL: 
-                fprintf(stderr, "SHL reg %d.\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "SHL reg %d.\n", reg1);
+                }
                 vm->cpu.registers[reg1] <<= 1;
                 break;
 
             // SP and BP ops
             case OPCODE_SETSP: 
-                fprintf(stderr, "MOV SP <- reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV SP <- reg %d\n", reg1);
+                }
                 vm->cpu.sp = vm->cpu.registers[reg1];
                 break;
             case OPCODE_GETSP: 
-                fprintf(stderr, "MOV reg %d <- SP\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV reg %d <- SP\n", reg1);
+                }
                 vm->cpu.registers[reg1] = vm->cpu.sp;
                 break;
             case OPCODE_ADDSP: 
-                fprintf(stderr, "ADD SP <- imm %d\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "ADD SP <- imm %d\n", value);
+                }
                 vm->cpu.sp = vm->cpu.sp + value;
                 break;
             case OPCODE_SUBSP: 
-                fprintf(stderr, "SUB SP <- imm %d\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "SUB SP <- imm %d\n", value);
+                }
                 vm->cpu.sp = vm->cpu.sp - value;
                 break;
             case OPCODE_SETBP: 
-                fprintf(stderr, "MOV BP <- reg %d\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV BP <- reg %d\n", reg1);
+                }
                 vm->cpu.bp = vm->cpu.registers[reg1];
                 break;
             case OPCODE_GETBP: 
-                fprintf(stderr, "MOV reg %d <- BP\n", reg1);
+                if (vm->debug) {
+                    fprintf(stderr, "MOV reg %d <- BP\n", reg1);
+                }
                 vm->cpu.registers[reg1] = vm->cpu.bp;
                 break;
             case OPCODE_ADDBP: 
-                fprintf(stderr, "ADD BP <- imm %d\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "ADD BP <- imm %d\n", value);
+                }
                 vm->cpu.bp = vm->cpu.bp + value;
                 break;
             case OPCODE_SUBBP: 
-                fprintf(stderr, "SUB BP <- imm %d\n", value);
+                if (vm->debug) {
+                    fprintf(stderr, "SUB BP <- imm %d\n", value);
+                }
                 vm->cpu.bp = vm->cpu.bp - value;
                 break;
 
@@ -691,48 +816,51 @@ void run_vm(VM *vm) {
             return;
         }
         // dump_cpu(&vm->cpu);
-        dump_vm(vm);
+        if (vm->debug) {
+            dump_vm(vm);
+        }
+        
     }
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Program file not specified!\n");
+    int debug = 0;
+    const char* filename = NULL;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
+            debug = 1;
+        } 
+        else if (argv[i][0] == '-') {
+            fprintf(stderr, "Unknown option: %s\n", argv[i]);
+            return 1;
+        } else {
+            filename = argv[i];
+        }
+    }
+
+    if (!filename) {
+        fprintf(stderr, "Usage: %s [-d|--debug] <binary file>\n", argv[0]);
         return 1;
     }
 
-    char *program_path = argv[1];
+    printf("Debug mode: %s\n", debug ? "on" : "off");
+    printf("File: %s\n", filename);
+    printf("===========\n");
+
     VM vm;
     init_vm(&vm);
+    vm.debug = debug;
 
-    // // loop and output test
-    // uint8_t program[] = {
-    //     0x0C, // MOVI
-    //     0b00000000, 
-    //     0x0F, 0x00, 
-    //     0x0B, // MOVR
-    //     0b00010000,
-    //     0x15, // ADDI
-    //     0b00010000,
-    //     48, 0x00,
-    //     0x0D, // STORDR
-    //     0b00010000,
-    //     0x01, 0xFF,
-    //     0x19, // DEC
-    //     0b00000000,
-    //     0x06, // JNZ
-    //     0x04, 0x00, 
-    //     0x01 // HLT
-    // };
-    // memcpy(vm.memory, program, sizeof(program));
-
-    if (exec_load_program(&vm, program_path) == -1) {
+    if (exec_load_program(&vm, filename) == -1) {
         return 1;
     }
+       
+    if (vm.debug) {
+        dump_vm(&vm);
+    }
     
-    dump_vm(&vm);
     run_vm(&vm);
-    dump_vm(&vm);
     
     printf("\n");
     return 0;
