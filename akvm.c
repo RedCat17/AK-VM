@@ -225,6 +225,20 @@ void dump_cpu(CPU *cpu) {
 // dump VM state to console
 void dump_vm(VM *vm) {
     dump_cpu(&vm->cpu);
+    fprintf(stderr, "\nRAM: ");
+    for (int i = 0; i < 256; i++) {
+        fprintf(stderr, "%d ", vm->memory[HEAP_ADDRESS + i]);
+    }    
+    fprintf(stderr, "\nStack (top 64 bytes): ");
+    for (int i = MEMORY_SIZE - 1; i > MEMORY_SIZE - 64; i--) {
+        fprintf(stderr, "%d, ", vm->memory[i]);
+    }
+    fprintf(stderr, "\n");
+}
+
+// dump VM state to console
+void dump_vm_verbose(VM *vm) {
+    dump_cpu(&vm->cpu);
     fprintf(stderr, "\nProgram space: ");
     for (int i = 0; i < 1024; i++) {
         fprintf(stderr, "%d ", vm->memory[i]);
@@ -299,11 +313,11 @@ uint16_t cpu_div(CPU *cpu, uint16_t value1, uint16_t value2) {
 
 int exec_stor(VM *vm, uint16_t address, uint16_t value) {
     if (address < HEAP_ADDRESS) {
-        fprintf(stderr, "Segfault! Can't write into program space.\n");
+        fprintf(stderr, "Address out of bounds! Can't write into program space.\n");
         return -1;
     }
     if (address >= STACK_END) {
-        fprintf(stderr, "Segfault! Can't write into stack.\n");
+        fprintf(stderr, "Address out of bounds! Can't write into stack.\n");
         return -1;
     }
     if (address == TX_ADDRESS) {
@@ -331,11 +345,11 @@ int exec_load(VM *vm, uint8_t reg, uint16_t address) {
 
 int exec_storb(VM *vm, uint16_t address, uint8_t value) {
     if (address < HEAP_ADDRESS) {
-        fprintf(stderr, "Segfault! Can't write into program space.\n");
+        fprintf(stderr, "Address out of bounds! Can't write into program space.\n");
         return -1;
     }
     if (address >= STACK_END) {
-        fprintf(stderr, "Segfault! Can't write into stack.\n");
+        fprintf(stderr, "Address out of bounds! Can't write into stack.\n");
         return -1;
     }
     if (address == TX_ADDRESS) {
