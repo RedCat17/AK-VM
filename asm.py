@@ -1,3 +1,4 @@
+import sys
 import argparse
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -294,12 +295,16 @@ class InstructionPayload:
     spec: InstructionSpec
     operands: list[str]
 
-class Record:
-    def __init__(self, type, address, size, payload):
+class IRRecord:
+    def __init__(self, type, address, size, payload, line_num, line_content):
         self.address = address
         self.payload = payload
         self.size = size
         self.type = type
+
+        self.line_num = line_num
+        self.line_content = line_content
+
         self.encoded_bytes = bytearray()
         self.relocations = [] # format: ('symbol', offset)
 
@@ -331,6 +336,22 @@ class OModificationRecord:
 class OEndRecord:
     entry_point: int
 
+class AssembleError(Exception):
+    def __init__(self, message, line_num=None, line_content=None):
+        super().__init__(message)
+        self.message = message
+        self.line_num = line_num
+        self.line_content = line_content
+    
+    def report(self):
+        lines = []
+        if self.line_num is not None:
+            lines.append(f"Line {self.line_num}: ")
+            lines.append(f"    {self.line_content}")
+        lines.append(f"Error: {self.message}")
+        return '\n'.join(lines)
+    
+
 def verify_ident(value: str):
     if value[0].isnumeric():
         raise ValueError(f'Ident cant begin with number: {value}')
@@ -355,7 +376,7 @@ def is_register(value: str):
 def parse_register(value: str):
     r = int(value[1:])
     if r < 0 or r > 15:
-        raise ValueError("Invalid register! Only R0-R15 are allowed.")
+        raise ValueError(f"Invalid register: {value}. Only R0-R15 are allowed.")
     return r
 
 def parse_operand(string):
@@ -579,11 +600,14 @@ def encode_instruction(record, verbose=False):
             tokens = operands[0].expr
             match check_expr(tokens):
                 case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
+                    raise AssembleError("Illegal expression.", record.line_num, record.line_content)
                 case ExprTypes.LOCAL:
-                    value = recursive_eval(tokens)
+                    try:
+                        value = recursive_eval(tokens)
+                    except ValueError as e:
+                        raise AssembleError(e, record.line_num, record.line_content)
                     if value < 0 or value > 65535:
-                        raise ValueError("Invalid value! Only 0-65535 are allowed.")
+                        raise AssembleError("Invalid value! Only 0-65535 are allowed.", record.line_num, record.line_content)
 
                     lower = value & LOWER_BYTE
                     higher = (value & HIGHER_BYTE) >> 8
@@ -596,7 +620,7 @@ def encode_instruction(record, verbose=False):
                     record.encoded_bytes.append(0)
                     record.encoded_bytes.append(0)
                 case ExprTypes.EXTERN_CONST:
-                    raise ValueError("Offset not yet implemented.")
+                    raise NotImplementedError("Offset not yet implemented.")
 
         case EncodingFormat.REG_IMM | EncodingFormat.REG_MEMIMM:            
             reg1 = operands[0].reg
@@ -606,11 +630,15 @@ def encode_instruction(record, verbose=False):
             tokens2 = operands[1].expr
             match check_expr(tokens2):
                 case ExprTypes.ILLEGAL:
-                    raise ValueError("Illegal expression.")
+                    raise AssembleError("Illegal expression.", record.line_num, record.line_content)
                 case ExprTypes.LOCAL:
-                    value = recursive_eval(tokens2)
+                    try:
+                        value = recursive_eval(tokens2)
+                    except ValueError as e:
+                        raise AssembleError(e, record.line_num, record.line_content)
+                    
                     if value < 0 or value > 65535:
-                        raise ValueError("Invalid value! Only 0-65535 are allowed.")
+                        raise AssembleError("Invalid value! Only 0-65535 are allowed.", record.line_num, record.line_content)
 
                     lower = value & LOWER_BYTE
                     higher = (value & HIGHER_BYTE) >> 8
@@ -623,7 +651,7 @@ def encode_instruction(record, verbose=False):
                     record.encoded_bytes.append(0)
                     record.encoded_bytes.append(0)
                 case ExprTypes.EXTERN_CONST:
-                    raise ValueError("Offset not yet implemented.")
+                    raise NotImplementedError("Offset not yet implemented.")
         case _:
             raise ValueError(f"Unknown encoding format: {format}")
 
@@ -631,7 +659,10 @@ def encode_data_bytes(record, verbose=False):
     values = record.payload['values']
     
     for value_expr in values:
-        value = recursive_eval(tokenize_expr(value_expr))
+        try:
+            value = recursive_eval(tokenize_expr(value_expr))
+        except ValueError as e:
+            raise AssembleError(e, record.line_num, record.line_content)
         byte = value & 0xFF
         record.encoded_bytes.append(byte)
 
@@ -762,84 +793,105 @@ def main():
 
     # File reading and splitting into lines
     with open(args.input_file, 'r') as file:
-        lines = [line.strip() for line in file.readlines() if (line.strip() and not line.startswith(';'))]
+        lines = [line.strip() for line in file.readlines()]
 
     # First pass:
     # 1. produce symbol tables
     # 2. produce instruction/data records list with addresses and sizes
     cur_address = 0
-    for line in lines:
-        # if label
-        if line.endswith(':'):
-            labels[line[:-1]] = cur_address
-        # if instruction or data
-        else:
-            raw = line.split(';')[0].strip() # remove comments
-            instruction, *rest = raw.split(None, 1)
-            match instruction:
-                # data
-                case '.DB':
-                    values = [v.strip() for v in rest[0].split(',')]
-                    size = len(values)
-                    records.append(Record(
-                        RecordTypes.DATA_BYTES, 
-                        cur_address, 
-                        size, 
-                        {
-                            "bytes": values
-                        }))
-                    cur_address += size
-                case '.STR':
-                    string = rest[0].strip('"')
-                    size = len(string)
-                    records.append(Record(
-                        RecordTypes.DATA_STRING, 
-                        cur_address, 
-                        size, 
-                        {
-                            "string": string
-                        }))
-                    cur_address += size
-                # constants
-                case '.DEF':
-                    parts = rest[0].split(None, 1)
-                    name = parts[0]
-                    value = parts[1]
-                    macros[name] = value
-                # external symbol 
-                case '.EXTERN':
-                    ident = rest[0]
-                    externs.append(ident)
-                # global symbol definition
-                case '.EXPORT':
-                    ident = rest[0]
-                    exports.append(ident)
-                case _:
-                    # if instruction
-                    if instruction in pattern_table:
-                        operands = []
-                        if rest:
-                            operand_strings = [op.strip() for op in rest[0].split(',')]
-                            operands = [parse_operand(op) for op in operand_strings]
-
-                        fmt = match_format(FORMAT_SPECS, operands)
-
-                        if fmt[0] in pattern_table[instruction]:
-                            instr_spec = pattern_table[instruction][fmt[0]]
-                        else:
-                            raise ValueError('Wrong format for instruction!')
-                        size = fmt[1].length
-                        records.append(Record(
-                            RecordTypes.INSTRUCTION, 
+    errors = []
+    for i, line in enumerate(lines, start=1):
+        if not line.strip() or line.startswith(';'):
+            continue
+        raw = line.split(';')[0].strip() # remove comments
+        try:            
+            # if label
+            if raw.endswith(':'):
+                labels[raw[:-1]] = cur_address
+            # if instruction or data
+            else:                
+                instruction, *rest = raw.split(None, 1)
+                match instruction:
+                    # data
+                    case '.DB':
+                        values = [v.strip() for v in rest[0].split(',')]
+                        size = len(values)
+                        records.append(IRRecord(
+                            RecordTypes.DATA_BYTES, 
                             cur_address, 
                             size, 
-                            InstructionPayload(instr_spec, operands)
-                            ))
-                        cur_address += size                
-                    else:
-                        raise ValueError(f"Unknown instruction: {instruction}")
-                        break
-    
+                            {
+                                "bytes": values
+                            },
+                            i,
+                            raw))
+                        cur_address += size
+                    case '.STR':
+                        string = rest[0].strip('"')
+                        size = len(string)
+                        records.append(IRRecord(
+                            RecordTypes.DATA_STRING, 
+                            cur_address, 
+                            size, 
+                            {
+                                "string": string
+                            },
+                            i,
+                            raw))
+                        cur_address += size
+                    # constants
+                    case '.DEF':
+                        parts = rest[0].split(None, 1)
+                        name = parts[0]
+                        value = parts[1]
+                        macros[name] = value
+                    # external symbol 
+                    case '.EXTERN':
+                        ident = rest[0]
+                        externs.append(ident)
+                    # global symbol definition
+                    case '.EXPORT':
+                        ident = rest[0]
+                        exports.append(ident)
+                    case _:
+                        # if instruction
+                        if instruction in pattern_table:
+                            operands = []
+                            if rest:
+                                operand_strings = [op.strip() for op in rest[0].split(',')]
+                                try:
+                                    operands = [parse_operand(op) for op in operand_strings]
+                                except ValueError as e:
+                                    raise AssembleError(e, i, raw)
+                            try:
+                                fmt = match_format(FORMAT_SPECS, operands)
+                            except ValueError as e:
+                                raise AssembleError(e, i, raw)
+
+                            if fmt[0] in pattern_table[instruction]:
+                                instr_spec = pattern_table[instruction][fmt[0]]
+                            else:
+                                raise AssembleError('Wrong format for instruction!', i, raw)
+                            size = fmt[1].length
+                            records.append(IRRecord(
+                                RecordTypes.INSTRUCTION, 
+                                cur_address, 
+                                size, 
+                                InstructionPayload(instr_spec, operands),
+                                i,
+                                raw))
+                            cur_address += size                
+                        else:
+                            raise AssembleError(f"Unknown instruction: {instruction}", i, raw)
+        except AssembleError as e:
+            errors.append(e)
+        except Exception as e:
+            raise
+            
+    if errors:
+        for error in errors:
+            print(error.report(), file=sys.stderr)
+        sys.exit(1)
     # Verbose outout
     if args.verbose:
         print("Labels: ", labels)
@@ -849,21 +901,32 @@ def main():
         print("Records:")
         for record in records:
             print(f"{record.address}: type={record.type} size={record.size}, payload={record.payload}")
+        print('-'*100)
 
     # Second pass:
     # 1. resolve expressions and operands using labels & macros
     # 2. encode instructions into bytes
     # 3. produce enriched records
     for record in records:
-        match record.type:
-            case RecordTypes.INSTRUCTION:                
-                encode_instruction(record, args.verbose)
-            case RecordTypes.DATA_BYTES:   
-                encode_data_bytes(record, args.verbose)
-            case RecordTypes.DATA_STRING:   
-                encode_data_string(record, args.verbose)
-            case RecordTypes.DIRECTIVE:
-                raise NotImplementedError("Directives are not implemented yet!")
+        try:
+            match record.type:
+                case RecordTypes.INSTRUCTION:                
+                    encode_instruction(record, args.verbose)
+                case RecordTypes.DATA_BYTES:   
+                    encode_data_bytes(record, args.verbose)
+                case RecordTypes.DATA_STRING:   
+                    encode_data_string(record, args.verbose)
+                case RecordTypes.DIRECTIVE:
+                    raise NotImplementedError("Directives are not implemented yet!")
+        except AssembleError as e:
+            errors.append(e)
+        except Exception as e:
+            raise
+    
+    if errors:
+        for error in errors:
+            print(error.report(), file=sys.stderr)
+        sys.exit(1)
 
     # Verbose outout
     if args.verbose:
@@ -873,6 +936,7 @@ def main():
             if record.relocations:
                 string += f", relocations={record.relocations}"
             print(string)
+        print('-'*100)
 
     
     # Show listing
