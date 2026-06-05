@@ -641,28 +641,32 @@ def encode_data_string(record, verbose=False):
     for ch in string:
         record.encoded_bytes.append(ord(ch))  
 
+def generate_line(record):
+    addr_col = f"{(record.address):05X}"
+    hex_bytes = ' '.join(f"{b:02X}" for b in record.encoded_bytes)
+    hex_col = f"{hex_bytes}".ljust(45)
+        
+    match record.type:
+        case RecordTypes.INSTRUCTION:       
+            mnemonic = record.payload.spec.mnemonic
+            operands = ', '.join(str(op) for op in record.payload.operands)
+            text_col = f"{mnemonic} {operands}"
+            pass
+        case RecordTypes.DATA_BYTES:   
+            values = record.payload['values']
+            text_col = ' '.join(values)
+        case RecordTypes.DATA_STRING:   
+            text_col = record.payload['string']
+        case RecordTypes.DIRECTIVE:
+            raise NotImplementedError("Directives are not implemented yet!")
+    return f"{addr_col}: {hex_col} {text_col}"
+
 def generate_listing(records):
     lines = []
 
     for record in records:
-        addr_col = f"{(record.address):05X}"
-        hex_bytes = ' '.join(f"{b:02X}" for b in record.encoded_bytes)
-        hex_col = f"{hex_bytes}".ljust(45)
-            
-        match record.type:
-            case RecordTypes.INSTRUCTION:       
-                mnemonic = record.payload.spec.mnemonic
-                operands = ', '.join(str(op) for op in record.payload.operands)
-                text_col = f"{mnemonic} {operands}"
-                pass
-            case RecordTypes.DATA_BYTES:   
-                values = record.payload['values']
-                text_col = ' '.join(values)
-            case RecordTypes.DATA_STRING:   
-                text_col = record.payload['string']
-            case RecordTypes.DIRECTIVE:
-                raise NotImplementedError("Directives are not implemented yet!")
-        lines.append(f"{addr_col}: {hex_col} {text_col}")
+        line = generate_line(record)
+        lines.append(line)
     
     return '\n'.join(lines)
 
