@@ -103,128 +103,141 @@ class InstructionSpec:
     format: EncodingFormat
     # relocatable_operands: tuple[int]
 
-instruction_table = {
-    # Control flow
-    'NOP': InstructionSpec(mnemonic='NOP', opcode=0x00, format=EncodingFormat.NONE),
-    'HLT': InstructionSpec(mnemonic='HLT', opcode=0x01, format=EncodingFormat.NONE),
-    'CMPR': InstructionSpec(mnemonic='CMPR', opcode=0x02, format=EncodingFormat.REG_REG),
-    'CMPI': InstructionSpec(mnemonic='CMPI', opcode=0x03, format=EncodingFormat.REG_IMM),
-    'JMP': InstructionSpec(mnemonic='JMP', opcode=0x04, format=EncodingFormat.IMM),
-    'JMZ': InstructionSpec(mnemonic='JMZ', opcode=0x05, format=EncodingFormat.IMM),
-    'JNZ': InstructionSpec(mnemonic='JNZ', opcode=0x06, format=EncodingFormat.IMM),
-    'JC': InstructionSpec(mnemonic='JC', opcode=0x07, format=EncodingFormat.IMM),
-    'JS': InstructionSpec(mnemonic='JS', opcode=0x08, format=EncodingFormat.IMM),
-    'CALL': InstructionSpec(mnemonic='CALL', opcode=0x09, format=EncodingFormat.IMM),
-    'RET': InstructionSpec(mnemonic='RET', opcode=0x0A, format=EncodingFormat.NONE),
-
-    # Memory
-    'MOVR': InstructionSpec(mnemonic='MOVR', opcode=0x10, format=EncodingFormat.REG_REG),
-    'MOVI': InstructionSpec(mnemonic='MOVI', opcode=0x11, format=EncodingFormat.REG_IMM),
-    'STORDR': InstructionSpec(mnemonic='STORDR', opcode=0x12, format=EncodingFormat.REG_IMM),
-    'STORMI': InstructionSpec(mnemonic='STORMI', opcode=0x13, format=EncodingFormat.REG_IMM),
-    'STORMR': InstructionSpec(mnemonic='STORMR', opcode=0x14, format=EncodingFormat.REG_REG),
-    'LOADRD': InstructionSpec(mnemonic='LOADRD', opcode=0x15, format=EncodingFormat.REG_IMM),
-    'LOADRM': InstructionSpec(mnemonic='LOADRM', opcode=0x16, format=EncodingFormat.REG_REG),
-    'PUSH': InstructionSpec(mnemonic='PUSH', opcode=0x17, format=EncodingFormat.REG),
-    'POP': InstructionSpec(mnemonic='POP', opcode=0x18, format=EncodingFormat.REG),
-    'STORBDR': InstructionSpec(mnemonic='STORBDR', opcode=0x19, format=EncodingFormat.REG_MEMIMM),
-    'STORBMI': InstructionSpec(mnemonic='STORBMI', opcode=0x1A, format=EncodingFormat.REG_IMM),
-    'STORBMR': InstructionSpec(mnemonic='STORBMR', opcode=0x1B, format=EncodingFormat.REG_MEMREG),
-    'LOADBRD': InstructionSpec(mnemonic='LOADBRD', opcode=0x1C, format=EncodingFormat.REG_MEMIMM),
-    'LOADBRM': InstructionSpec(mnemonic='LOADBRM', opcode=0x1D, format=EncodingFormat.REG_MEMREG),
-
-    # Arithmetic
-    'ADDR': InstructionSpec(mnemonic='ADDR', opcode=0x20, format=EncodingFormat.REG_REG),
-    'ADDI': InstructionSpec(mnemonic='ADDI', opcode=0x21, format=EncodingFormat.REG_IMM),
-    'SUBR': InstructionSpec(mnemonic='SUBR', opcode=0x22, format=EncodingFormat.REG_REG),
-    'SUBI': InstructionSpec(mnemonic='SUBI', opcode=0x23, format=EncodingFormat.REG_IMM),
-    'INC': InstructionSpec(mnemonic='INC', opcode=0x24, format=EncodingFormat.REG),
-    'DEC': InstructionSpec(mnemonic='DEC', opcode=0x25, format=EncodingFormat.REG),
-    'MULR': InstructionSpec(mnemonic='MULR', opcode=0x26, format=EncodingFormat.REG_REG),
-    'MULI': InstructionSpec(mnemonic='MULI', opcode=0x27, format=EncodingFormat.REG_IMM),
-    'DIVR': InstructionSpec(mnemonic='DIVR', opcode=0x28, format=EncodingFormat.REG_REG),
-    'DIVI': InstructionSpec(mnemonic='DIVI', opcode=0x29, format=EncodingFormat.REG_IMM),
-
-    # Bit ops
-    'ANDR': InstructionSpec(mnemonic='ANDR', opcode=0x30, format=EncodingFormat.REG_REG),
-    'ANDI': InstructionSpec(mnemonic='ANDI', opcode=0x31, format=EncodingFormat.REG_IMM),
-    'ORR': InstructionSpec(mnemonic='ORR', opcode=0x32, format=EncodingFormat.REG_REG),
-    'ORI': InstructionSpec(mnemonic='ORI', opcode=0x33, format=EncodingFormat.REG_IMM),
-    'XORR': InstructionSpec(mnemonic='XORR', opcode=0x34, format=EncodingFormat.REG_REG),
-    'XORI': InstructionSpec(mnemonic='XORI', opcode=0x35, format=EncodingFormat.REG_IMM),
-    'NOT': InstructionSpec(mnemonic='NOT', opcode=0x36, format=EncodingFormat.REG),
-    'SHR': InstructionSpec(mnemonic='SHR', opcode=0x37, format=EncodingFormat.REG),
-    'SHL': InstructionSpec(mnemonic='SHL', opcode=0x38, format=EncodingFormat.REG),
-
-    # SP and BP ops
-    'SETSP': InstructionSpec(mnemonic='SETSP', opcode=0x40, format=EncodingFormat.REG),
-    'GETSP': InstructionSpec(mnemonic='GETSP', opcode=0x41, format=EncodingFormat.REG),
-    'ADDSP': InstructionSpec(mnemonic='ADDSP', opcode=0x42, format=EncodingFormat.IMM),
-    'SUBSP': InstructionSpec(mnemonic='SUBSP', opcode=0x43, format=EncodingFormat.IMM),
-    'SETBP': InstructionSpec(mnemonic='SETBP', opcode=0x44, format=EncodingFormat.REG),
-    'GETBP': InstructionSpec(mnemonic='GETBP', opcode=0x45, format=EncodingFormat.REG),
-    'ADDBP': InstructionSpec(mnemonic='ADDBP', opcode=0x46, format=EncodingFormat.IMM),
-    'SUBBP': InstructionSpec(mnemonic='SUBBP', opcode=0x47, format=EncodingFormat.IMM),
-}
-
 pattern_table = {
     # Control flow
-    'CMP': {
-        EncodingFormat.REG_REG: instruction_table['CMPR'],
-        EncodingFormat.REG_IMM: instruction_table['CMPI'],
+    'NOP': {
+        EncodingFormat.NONE: InstructionSpec(mnemonic='NOP', opcode=0x00, format=EncodingFormat.NONE),
     },
+    'HLT': {
+        EncodingFormat.NONE: InstructionSpec(mnemonic='HLT', opcode=0x01, format=EncodingFormat.NONE),
+    },
+    'CMP': {
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='CMPR', opcode=0x02, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='CMPI', opcode=0x03, format=EncodingFormat.REG_IMM),
+    },
+    'JMP': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JMP', opcode=0x04, format=EncodingFormat.IMM),
+    },
+    'JMZ': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JMZ', opcode=0x05, format=EncodingFormat.IMM),
+    },
+    'JNZ': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JNZ', opcode=0x06, format=EncodingFormat.IMM),
+    },
+    'JC': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JC', opcode=0x07, format=EncodingFormat.IMM),
+    },
+    'JS': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JS', opcode=0x08, format=EncodingFormat.IMM),
+    },
+    'CALL': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='CALL', opcode=0x09, format=EncodingFormat.IMM),
+    },
+    'RET': {
+        EncodingFormat.NONE: InstructionSpec(mnemonic='RET', opcode=0x0A, format=EncodingFormat.NONE),
+    },
+
     # Memory
     'MOV': {
-        EncodingFormat.REG_REG: instruction_table['MOVR'],
-        EncodingFormat.REG_IMM: instruction_table['MOVI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='MOVR', opcode=0x10, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='MOVI', opcode=0x11, format=EncodingFormat.REG_IMM),
     },
     'STOR': {
-        EncodingFormat.REG_MEMIMM: instruction_table['STORDR'],
-        EncodingFormat.REG_IMM: instruction_table['STORMI'],
-        EncodingFormat.REG_MEMREG: instruction_table['STORMR'],
+        EncodingFormat.REG_MEMIMM: InstructionSpec(mnemonic='STORDR', opcode=0x12, format=EncodingFormat.REG_MEMIMM),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='STORMI', opcode=0x13, format=EncodingFormat.REG_IMM),
+        EncodingFormat.REG_MEMREG: InstructionSpec(mnemonic='STORMR', opcode=0x14, format=EncodingFormat.REG_MEMREG),
     },
     'LOAD': {
-        EncodingFormat.REG_MEMIMM: instruction_table['LOADRD'],
-        EncodingFormat.REG_MEMREG: instruction_table['LOADRM'],
+        EncodingFormat.REG_MEMIMM: InstructionSpec(mnemonic='LOADRD', opcode=0x15, format=EncodingFormat.REG_MEMIMM),
+        EncodingFormat.REG_MEMREG: InstructionSpec(mnemonic='LOADRM', opcode=0x16, format=EncodingFormat.REG_MEMREG),
+    },
+    'PUSH': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='PUSH', opcode=0x17, format=EncodingFormat.REG),
+    },
+    'POP': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='POP', opcode=0x18, format=EncodingFormat.REG),
     },
     'STORB': {
-        EncodingFormat.REG_MEMIMM: instruction_table['STORBDR'],
-        EncodingFormat.REG_IMM: instruction_table['STORBMI'],
-        EncodingFormat.REG_MEMREG: instruction_table['STORBMR'],
+        EncodingFormat.REG_MEMIMM: InstructionSpec(mnemonic='STORBDR', opcode=0x19, format=EncodingFormat.REG_MEMIMM),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='STORBMI', opcode=0x1A, format=EncodingFormat.REG_IMM),
+        EncodingFormat.REG_MEMREG: InstructionSpec(mnemonic='STORBMR', opcode=0x1B, format=EncodingFormat.REG_MEMREG),
     },
     'LOADB': {
-        EncodingFormat.REG_MEMIMM: instruction_table['LOADBRD'],
-        EncodingFormat.REG_MEMREG: instruction_table['LOADBRM'],
+        EncodingFormat.REG_MEMIMM: InstructionSpec(mnemonic='LOADBRD', opcode=0x1C, format=EncodingFormat.REG_MEMIMM),
+        EncodingFormat.REG_MEMREG: InstructionSpec(mnemonic='LOADBRM', opcode=0x1D, format=EncodingFormat.REG_MEMREG),
     },
+
     # Arithmetic
     'ADD': {
-        EncodingFormat.REG_REG: instruction_table['ADDR'],
-        EncodingFormat.REG_IMM: instruction_table['ADDI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='ADDR', opcode=0x20, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='ADDI', opcode=0x21, format=EncodingFormat.REG_IMM),
     },
     'SUB': {
-        EncodingFormat.REG_REG: instruction_table['SUBR'],
-        EncodingFormat.REG_IMM: instruction_table['SUBI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='SUBR', opcode=0x22, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='SUBI', opcode=0x23, format=EncodingFormat.REG_IMM),
+    },
+    'INC': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='INC', opcode=0x24, format=EncodingFormat.REG),
+    },
+    'DEC': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='DEC', opcode=0x25, format=EncodingFormat.REG),
     },
     'MUL': {
-        EncodingFormat.REG_REG: instruction_table['MULR'],
-        EncodingFormat.REG_IMM: instruction_table['MULI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='MULR', opcode=0x26, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='MULI', opcode=0x27, format=EncodingFormat.REG_IMM),
     },
     'DIV': {
-        EncodingFormat.REG_REG: instruction_table['DIVR'],
-        EncodingFormat.REG_IMM: instruction_table['DIVI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='DIVR', opcode=0x28, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='DIVI', opcode=0x29, format=EncodingFormat.REG_IMM),
     },
+
     # Bit ops
     'AND': {
-        EncodingFormat.REG_REG: instruction_table['ANDR'],
-        EncodingFormat.REG_IMM: instruction_table['ANDI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='ANDR', opcode=0x30, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='ANDI', opcode=0x31, format=EncodingFormat.REG_IMM),
     },
     'OR': {
-        EncodingFormat.REG_REG: instruction_table['ORR'],
-        EncodingFormat.REG_IMM: instruction_table['ORI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='ORR', opcode=0x32, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='ORI', opcode=0x33, format=EncodingFormat.REG_IMM),
     },
     'XOR': {
-        EncodingFormat.REG_REG: instruction_table['XORR'],
-        EncodingFormat.REG_IMM: instruction_table['XORI'],
+        EncodingFormat.REG_REG: InstructionSpec(mnemonic='XORR', opcode=0x34, format=EncodingFormat.REG_REG),
+        EncodingFormat.REG_IMM: InstructionSpec(mnemonic='XORI', opcode=0x35, format=EncodingFormat.REG_IMM),
+    },
+    'NOT': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='NOT', opcode=0x36, format=EncodingFormat.REG),
+    },
+    'SHR': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='SHR', opcode=0x37, format=EncodingFormat.REG),
+    },
+    'SHL': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='SHL', opcode=0x38, format=EncodingFormat.REG),
+    },
+
+    # SP and BP ops
+    'SETSP': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='SETSP', opcode=0x40, format=EncodingFormat.REG),
+    },
+    'GETSP': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='GETSP', opcode=0x41, format=EncodingFormat.REG),
+    },
+    'ADDSP': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='ADDSP', opcode=0x42, format=EncodingFormat.IMM),
+    },
+    'SUBSP': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='SUBSP', opcode=0x43, format=EncodingFormat.IMM),
+    },
+    'SETBP': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='SETBP', opcode=0x44, format=EncodingFormat.REG),
+    },
+    'GETBP': {
+        EncodingFormat.REG: InstructionSpec(mnemonic='GETBP', opcode=0x45, format=EncodingFormat.REG),
+    },
+    'ADDBP': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='ADDBP', opcode=0x46, format=EncodingFormat.IMM),
+    },
+    'SUBBP': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='SUBBP', opcode=0x47, format=EncodingFormat.IMM),
     },
 }
 
@@ -797,15 +810,11 @@ def main():
                         if rest:
                             operand_strings = [op.strip() for op in rest[0].split(',')]
                             operands = [parse_operand(op) for op in operand_strings]
-                        print(operands)
-                        print(instruction)
-                        print(pattern_table[instruction])
 
                         fmt = match_format(FORMAT_SPECS, operands)
 
                         if fmt[0] in pattern_table[instruction]:
                             instr_spec = pattern_table[instruction][fmt[0]]
-                            print('found opcode: ', instr_spec)
                         else:
                             raise ValueError('Wrong format for instruction!')
                         size = fmt[1].length
@@ -815,21 +824,7 @@ def main():
                             size, 
                             InstructionPayload(instr_spec, operands)
                             ))
-                        cur_address += size    
-                    elif instruction in instruction_table:
-                        operands = []
-                        if rest:
-                            operand_strings = [op.strip() for op in rest[0].split(',')]
-                            operands = [parse_operand(op) for op in operand_strings]
-                        instr_spec = instruction_table[instruction]
-                        size = FORMAT_SPECS[instr_spec.format].length
-                        records.append(Record(
-                            RecordTypes.INSTRUCTION, 
-                            cur_address, 
-                            size, 
-                            InstructionPayload(instr_spec, operands)
-                            ))
-                        cur_address += size                    
+                        cur_address += size                
                     else:
                         raise ValueError(f"Unknown instruction: {instruction}")
                         break
@@ -880,10 +875,9 @@ def main():
             output = generate_binary(records)
 
             output_path = args.output or args.input_file + '.bin'
-            for byte in output:
-                print(f"{hex(byte)}", end=', ')
-
-            print(f"\n{len(output)} bytes total.")
+            
+            if args.verbose:
+                print(f"\n{len(output)} bytes total.")
             
             with open(output_path, 'wb') as file:
                 file.write(output)

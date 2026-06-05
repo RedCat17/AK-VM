@@ -56,6 +56,12 @@ Redirecting debug output to file:
 ./build/akvm program.bin 2> output.txt
 ```
 
+Quick example for Hello World:
+```
+python asm.py examples/hello.asm -o examples/hello.bin -f bin
+./build/akvm examples/hello.bin
+```
+
 ## Code example
 "Hello world" written in Assembly for AK-VM:
 ```
