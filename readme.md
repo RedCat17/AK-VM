@@ -64,8 +64,8 @@ Redirecting debug output to file:
 
 Quick example for Hello World:
 ```
-python asm.py examples/hello.asm -o examples/hello.bin -f bin
-./build/akvm examples/hello.bin
+python asm.py examples/basic/hello.asm -o examples/basic/hello.bin -f bin
+./build/akvm examples/basic/hello.bin
 ```
 
 ## Code example
