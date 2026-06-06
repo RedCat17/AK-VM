@@ -11,6 +11,8 @@
 ## I/O:
 
 ### Serial I/O (stdin/stdout). 
+
+Blocking I/O (execution pauses until symbol is read or written). 
 ```
 [0xF800] - serial input (RX), read a char;
 [0xF801] - serial output (TX), write a char;
