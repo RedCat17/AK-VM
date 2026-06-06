@@ -77,6 +77,19 @@ MOV R3, 1                   ; digit multiplier
 
 parse_loop:
 LOADB R4, [R1]              ; load digit char
+
+CMP R4, 48
+JS digit_invalid            ; below '0'
+
+CMP R4, 58
+JS digit_ok                 ; below or '9'
+JMP digit_invalid           ; invalid char (not a digit)
+
+digit_invalid:
+MOV R2, 0
+JMP _parse_number_epilogue
+
+digit_ok:
 SUB R4, 48                  ; convert char to number
 MUL R4, R3                  ; now R4 contains current digit (a * n^10)
 MUL R3, 10
