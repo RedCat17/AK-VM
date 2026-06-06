@@ -68,6 +68,12 @@ python asm.py examples/basic/hello.asm -o examples/basic/hello.bin -f bin
 ./build/akvm examples/basic/hello.bin
 ```
 
+Calculator example:
+```
+python asm.py examples/calc.asm -o examples/calc.bin -f bin
+./build/akvm examples/calc.bin
+```
+
 ## Code example
 "Hello world" written in Assembly for AK-VM:
 ```
