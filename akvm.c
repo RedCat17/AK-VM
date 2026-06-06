@@ -246,11 +246,11 @@ void dump_vm_verbose(VM *vm) {
     dump_cpu(&vm->cpu);
     fprintf(stderr, "\nProgram space: ");
     for (int i = 0; i < 1024; i++) {
-        fprintf(stderr, "%d ", vm->memory[i]);
+        fprintf(stderr, "%X ", vm->memory[i]);
     }
     fprintf(stderr, "\nRAM: ");
     for (int i = 0; i < 256; i++) {
-        fprintf(stderr, "%d ", vm->memory[HEAP_ADDRESS + i]);
+        fprintf(stderr, "%X ", vm->memory[HEAP_ADDRESS + i]);
     }    
     fprintf(stderr, "\nStack (top 64 bytes): ");
     for (int i = MEMORY_SIZE - 1; i > MEMORY_SIZE - 64; i--) {
@@ -605,15 +605,15 @@ void run_vm(VM *vm) {
                 break;
             case OPCODE_STORBMI: 
                 if (vm->debug) {
-                    fprintf(stderr, "STORB ind %d <- imm %d\n", reg1, value);
+                    fprintf(stderr, "STORB imm %d -> ind %d\n", reg1, value);
                 }
                 exec_storb(vm, vm->cpu.registers[reg1], value);
                 break;
             case OPCODE_STORBMR: 
                 if (vm->debug) {
-                    fprintf(stderr, "STORB ind %d <- reg2 %d\n", reg1, reg2);
+                    fprintf(stderr, "STORB reg %d -> ind %d\n", reg1, reg2);
                 }
-                exec_storb(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                exec_storb(vm, vm->cpu.registers[reg2], vm->cpu.registers[reg1]);
                 break;
             case OPCODE_LOADBRD: 
                 if (vm->debug) {
@@ -861,6 +861,10 @@ int main(int argc, char *argv[]) {
     }
     
     run_vm(&vm);
+       
+    if (vm.debug) {
+        dump_vm_verbose(&vm);
+    }
     
     printf("\n");
     return 0;
