@@ -32,7 +32,7 @@
 #define OPCODE_CMPR   0x02
 #define OPCODE_CMPI   0x03
 #define OPCODE_JMP     0x04
-#define OPCODE_JMZ     0x05
+#define OPCODE_JZ     0x05
 #define OPCODE_JNZ     0x06
 #define OPCODE_JC     0x07
 #define OPCODE_JS     0x08
@@ -111,7 +111,7 @@ OpcodeData opcode_table[256] = {
     [OPCODE_CMPR] = {"CMPR", FORMAT_REG_REG},
     [OPCODE_CMPI] = {"CMPI", FORMAT_REG_IMM},
     [OPCODE_JMP]   = {"JMP",   FORMAT_IMM},
-    [OPCODE_JMZ]   = {"JMZ",   FORMAT_IMM},
+    [OPCODE_JZ]   = {"JZ",   FORMAT_IMM},
     [OPCODE_JNZ]   = {"JNZ",   FORMAT_IMM},
     [OPCODE_JC]   = {"JC",   FORMAT_IMM},
     [OPCODE_JS]   = {"JS",   FORMAT_IMM},
@@ -485,9 +485,9 @@ void run_vm(VM *vm) {
                 }
                 vm->cpu.pc = value;
                 break;
-            case OPCODE_JMZ: 
+            case OPCODE_JZ: 
                 if (vm->debug) {
-                    fprintf(stderr, "JMZ adr %X\n", value);
+                    fprintf(stderr, "JZ adr %X\n", value);
                 }
                 if (vm->cpu.flags & ZERO_FLAG) {                    
                     if (vm->debug) {

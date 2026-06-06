@@ -26,7 +26,7 @@ ADDI R13, ASCII_0
 STORBDR R13, OUT_ADDRESS
 
 DEC R14
-JMZ epilogue
+JZ epilogue
 
 PUSH R14
 CALL _sub

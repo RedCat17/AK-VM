@@ -119,8 +119,8 @@ pattern_table = {
     'JMP': {
         EncodingFormat.IMM: InstructionSpec(mnemonic='JMP', opcode=0x04, format=EncodingFormat.IMM),
     },
-    'JMZ': {
-        EncodingFormat.IMM: InstructionSpec(mnemonic='JMZ', opcode=0x05, format=EncodingFormat.IMM),
+    'JZ': {
+        EncodingFormat.IMM: InstructionSpec(mnemonic='JZ', opcode=0x05, format=EncodingFormat.IMM),
     },
     'JNZ': {
         EncodingFormat.IMM: InstructionSpec(mnemonic='JNZ', opcode=0x06, format=EncodingFormat.IMM),
@@ -656,7 +656,7 @@ def encode_instruction(record, verbose=False):
             raise ValueError(f"Unknown encoding format: {format}")
 
 def encode_data_bytes(record, verbose=False):
-    values = record.payload['values']
+    values = record.payload['bytes']
     
     for value_expr in values:
         try:
@@ -669,8 +669,9 @@ def encode_data_bytes(record, verbose=False):
 def encode_data_string(record, verbose=False):
     string = record.payload['string']
 
-    for ch in string:
-        record.encoded_bytes.append(ord(ch))  
+    # for ch in string:
+    #     record.encoded_bytes.append(ord(ch))  
+    record.encoded_bytes = string.encode("utf-8")
 
 def generate_line(record):
     addr_col = f"{(record.address):05X}"
@@ -684,7 +685,7 @@ def generate_line(record):
             text_col = f"{mnemonic} {operands}"
             pass
         case RecordTypes.DATA_BYTES:   
-            values = record.payload['values']
+            values = record.payload['bytes']
             text_col = ' '.join(values)
         case RecordTypes.DATA_STRING:   
             text_col = record.payload['string']
@@ -807,7 +808,10 @@ def main():
         try:            
             # if label
             if raw.endswith(':'):
-                labels[raw[:-1]] = cur_address
+                label = raw[:-1]
+                if label in labels:
+                    raise AssembleError(f"Duplicate label: {label}", i, raw)
+                labels[label] = cur_address
             # if instruction or data
             else:                
                 instruction, *rest = raw.split(None, 1)
@@ -828,7 +832,7 @@ def main():
                         cur_address += size
                     case '.STR':
                         string = rest[0].strip('"')
-                        size = len(string)
+                        size = len(string.encode("utf-8"))
                         records.append(IRRecord(
                             RecordTypes.DATA_STRING, 
                             cur_address, 
