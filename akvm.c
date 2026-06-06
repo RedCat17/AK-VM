@@ -396,7 +396,7 @@ int exec_pop(VM *vm, uint8_t reg) {
         return -1;
     }
     vm->cpu.sp += 2;
-    vm->cpu.registers[reg] = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp - 1] << 8) ;
+    vm->cpu.registers[reg] = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp + 1] << 8) ;
     return 0;
 }
 
@@ -406,7 +406,7 @@ int exec_call(VM *vm, uint16_t address) {
         return -1;
     }
     vm->memory[vm->cpu.sp] = vm->cpu.pc & 0x00FF;
-    vm->memory[vm->cpu.sp - 1] = (vm->cpu.pc >> 8);
+    vm->memory[vm->cpu.sp + 1] = (vm->cpu.pc >> 8);
     vm->cpu.sp -= 2;
     vm->cpu.pc = address;
     return 0;
@@ -418,7 +418,7 @@ int exec_ret(VM *vm) {
         return -1;
     }
     vm->cpu.sp += 2;
-    vm->cpu.pc = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp - 1] << 8) ;
+    vm->cpu.pc = vm->memory[vm->cpu.sp] | (vm->memory[vm->cpu.sp + 1] << 8) ;
     return 0;
 }
 
@@ -569,9 +569,9 @@ void run_vm(VM *vm) {
                 break;
             case OPCODE_STORMR: 
                 if (vm->debug) {
-                    fprintf(stderr, "STOR ind %d <- reg2 %d\n", reg1, reg2);
+                    fprintf(stderr, "STOR reg %d -> ind %d\n", reg1, reg2);
                 }
-                exec_stor(vm, vm->cpu.registers[reg1], vm->cpu.registers[reg2]);
+                exec_stor(vm, vm->cpu.registers[reg2], vm->cpu.registers[reg1]);
                 break;
             case OPCODE_LOADRD: 
                 if (vm->debug) {

@@ -5,6 +5,18 @@
 .DEF HEAP_ADDR 0x4000
 
 JMP start
+msg_enter_1:
+.STR "Enter first number: "
+.DB 0
+msg_enter_2:
+.STR "Enter second number: "
+.DB 0
+msg_sum:
+.STR "Sum: "
+.DB 0
+msg_error:
+.STR "Error!"
+.DB 0
 
 ; ============================================================================================
 ; READ_STRING
@@ -29,6 +41,14 @@ _input_str_epilogue:
 MOV R2, 0
 STORB R2, [R0]          ; add zero-termination
 RET
+
+; ============================================================================================
+; ERROR_HANDLER
+; ============================================================================================
+errorHandler: 
+MOV R0, msg_error 
+CALL printStr
+HLT
 
 ; ============================================================================================
 ; PRINT_STRING
@@ -69,7 +89,7 @@ RET
 parseNumber: 
 MOV R2, 0 ; clear output register
 CMP R1, 0 ; if len == 0, RET
-JZ _parse_number_epilogue
+JZ errorHandler
 
 ADD R1, R0                  ; now R1 contains address of string end
 DEC R1                      
@@ -86,8 +106,7 @@ JS digit_ok                 ; below or '9'
 JMP digit_invalid           ; invalid char (not a digit)
 
 digit_invalid:
-MOV R2, 0
-JMP _parse_number_epilogue
+JMP errorHandler
 
 digit_ok:
 SUB R4, 48                  ; convert char to number
@@ -146,6 +165,10 @@ RET
 ; ============================================================================================
 start:
 
+; print prompt
+MOV R0, msg_enter_1
+CALL printStr
+
 ; enter first number
 MOV R0, HEAP_ADDR   ; address to save input
 CALL readStr
@@ -154,6 +177,10 @@ MOV R0, HEAP_ADDR   ; address of string
 CALL parseNumber
 
 MOV R5, R2          ; store number in R5 so it won't get corrupted
+
+; print prompt
+MOV R0, msg_enter_2
+CALL printStr
 
 ; enter second number
 MOV R0, HEAP_ADDR   ; address to save input
@@ -164,6 +191,10 @@ CALL parseNumber
 
 ; calculate sum
 ADD R5, R2 
+
+; print 
+MOV R0, msg_sum
+CALL printStr
 
 ; output result
 MOV R0, R5
