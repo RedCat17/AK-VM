@@ -617,7 +617,7 @@ void run_vm(VM *vm) {
                 break;
             case OPCODE_LOADBRD: 
                 if (vm->debug) {
-                    fprintf(stderr, "LOADB reg %d <- adr %X\n", value, reg1);
+                    fprintf(stderr, "LOADB reg %d <- adr %X\n", reg1, value);
                 }
                 exec_loadb(vm, reg1, value);
                 break;

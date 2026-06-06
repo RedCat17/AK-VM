@@ -25,7 +25,7 @@ JNZ msg_loop_1
 MOV R0, HEAP_ADDR
 input_loop:
 LOADB R1, [RX_ADDR]
-STORB R0, [R1]
+STORB R1, [R0]
 INC R0
 CMP R1, 10 ; zero-terminated
 JNZ input_loop
