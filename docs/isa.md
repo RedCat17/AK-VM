@@ -78,12 +78,18 @@ Byte 3-4: [16 bits: immediate or address]
 |--------------------|--------------------------------------|--------|
 | [MOVR](#movr)      | Copy word from src to dst            | 0x10   |
 | [MOVI](#movi)      | -                                    | 0x11   |
-| [STOR](#stor)      | Store word to memory                 | 0x12   |
-| [LOAD](#load)      | Loads word from memory to dst        | 0x15   |
-| [PUSH](#push)      | Pushes word to stack                 | 0x17   |
-| [POP](#pop)        | Pops word from stack                 | 0x18   |
-| [STORB](#storb)    | Stores byte from src in memory       | 0x19   |
-| [LOADB](#loadb)    | Loads byte from memory to dst        | 0x1B   |
+| [STORDR](#stordr)  | Store word to memory                 | 0x12   |
+| [STORMI](#stormi)  | Store word to memory                 | 0x13   |
+| [STORMR](#stormt)  | Store word to memory                 | 0x14   |
+| [LOADRD](#loadrd)  | Load word from memory                | 0x15   |
+| [LOADRM](#loadrm)  | Load word from memory                | 0x16   |
+| [PUSH](#push)      | Push word to stack                   | 0x17   |
+| [POP](#pop)        | Pop word from stack                  | 0x18   |
+| [STORBDR](#storbdr)| Store byte to memory                 | 0x19   |
+| [STORBMI](#storbmi)| Store byte to memory                 | 0x1A   |
+| [STORBMR](#storbmr)| Store byte to memory                 | 0x1B   |
+| [LOADBRD](#loadbrd)| Loads byte from memory               | 0x1C   |
+| [LOADBRM](#loadbrd)| Loads byte from memory               | 0x1D   |
 
 ### Arithmetics
 
@@ -129,7 +135,9 @@ Byte 3-4: [16 bits: immediate or address]
 
 ## Opcodes
 
-### NOP
+### Control flow
+
+#### NOP
 
 **Description:** No operation. Does nothing.
 
@@ -144,7 +152,9 @@ byte1: 0x00
 
 **Example:** `NOP`
 
-### HLT
+---
+
+#### HLT
 
 **Description:** Stop execution, halt VM.
 
@@ -159,7 +169,9 @@ byte1: 0x01
 
 **Example:** `HLT`
 
-### CMPR
+---
+
+#### CMPR
 
 CMPR reg1, reg2
 
@@ -179,7 +191,9 @@ byte2: reg1 | reg2
 
 **Example:** `CMPR R0, R1`
 
-### CMPI
+---
+
+#### CMPI
 
 CMPI reg1, imm
 
@@ -200,7 +214,9 @@ byte3, byte4: imm
 
 **Example:** `CMPI R0, 10`
 
-### JMP
+---
+
+#### JMP
 
 JMP imm
 
@@ -220,7 +236,9 @@ byte2, byte3: imm
 
 **Example:** `JMP label`
 
-### JZ
+---
+
+#### JZ
 
 JZ imm
 
@@ -240,7 +258,9 @@ byte2, byte3: imm
 
 **Example:** `JZ label`
 
-### JNZ
+---
+
+#### JNZ
 
 JNZ imm
 
@@ -260,7 +280,9 @@ byte2, byte3: imm
 
 **Example:** `JNZ label`
 
-### JC
+---
+
+#### JC
 
 JC imm
 
@@ -283,7 +305,9 @@ byte2, byte3: imm
 
 **Example:** `JC label`
 
-### JS
+---
+
+#### JS
 
 JS imm
 
@@ -303,7 +327,9 @@ byte2, byte3: imm
 
 **Example:** `JS label`
 
-### CALL
+---
+
+#### CALL
 
 CALL imm
 
@@ -323,7 +349,9 @@ byte2, byte3: imm
 
 **Example:** `CALL label`
 
-### RET
+---
+
+#### RET
 
 RET
 
@@ -339,3 +367,271 @@ byte1: 0x0A
 **Flags affected:** None
 
 **Example:** `RET`
+
+---
+
+### Memory
+
+#### MOVR
+
+**Description:** Copy word from source register to destination register.
+
+**Operation:** `dst ← src`
+
+**Encoding:**
+```
+byte1: 0x10
+byte2: src (4 bits) | dst (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `MOVR R1, R0`
+
+---
+
+#### MOVI
+
+**Description:** Move immediate word value to destination register.
+
+**Operation:** `dst ← imm`
+
+**Encoding:**
+```
+byte1: 0x11
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `MOVI R2, 0x1234`
+
+---
+
+#### STORDR
+
+**Description:** Store word from source register to immediate memory address.
+
+**Operation:** `src -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x12
+byte2: src (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `STORDR R3, 0xF801`
+
+---
+
+#### STORMI
+
+**Description:** Store word from immediate to memory address in base register.
+
+**Operation:** `src -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x13
+byte2: src (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `STORMI 42, R1`
+
+---
+
+#### STORMR
+
+**Description:** Store word from source register to memory address in base register.
+
+**Operation:** `src -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x14
+byte2: src (4 bits) | base (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `STORMR R3, R1`
+
+---
+
+#### LOADRD
+
+**Description:** Load word from immediate memory address to destination register.
+
+**Operation:** `dst ← mem[base]`
+
+**Encoding:**
+```
+byte1: 0x15
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `LOADRD R2, 0xF800`
+
+---
+
+#### LOADRM
+
+**Description:** Load word from memory address in base register to destination register.
+
+**Operation:** `dst ← mem[base]`
+
+**Encoding:**
+```
+byte1: 0x16
+byte2: dst (4 bits) | base (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `LOADRM R2, R0`
+
+---
+
+#### PUSH
+
+**Description:** Push word from register onto stack. Store, then decrement stack pointer by 2.
+
+**Operation:** `mem[SP] ← src, SP ← SP - 2`
+
+**Encoding:**
+```
+byte1: 0x17
+byte2: src (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `PUSH R5`
+
+---
+
+#### POP
+
+**Description:** Pop word from stack to register. Increment stack pointer by 2, then load from stack pointer.
+
+**Operation:** `SP ← SP + 2, dst ← mem[SP]`
+
+**Encoding:**
+```
+byte1: 0x18
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `POP R6`
+
+---
+
+#### STORBDR
+
+**Description:** Store byte from source register (lowest byte) to immediate memory address.
+
+**Operation:** `src & 0xFF -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x19
+byte2: src (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `STORBDR R3, 0x13`
+
+---
+
+#### STORBMI
+
+**Description:** Store byte from immediate to memory address in base register.
+
+**Operation:** `src & 0xFF -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x1A
+byte2: src (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `STORBMI 42, R1`
+
+---
+
+#### STORBMR
+
+**Description:** Store byte from source register (lowest byte) to memory address in base register.
+
+**Operation:** `src & 0xFF -> mem[base]`
+
+**Encoding:**
+```
+byte1: 0x1B
+byte2: src (4 bits) | base (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `STORBMR R3, R1`
+
+---
+
+#### LOADBRD
+
+**Description:** Load byte from immediate memory address to destination register (zero-extended).
+
+**Operation:** `dst ← 0x00FF & mem[base]`
+
+**Encoding:**
+```
+byte1: 0x1C
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm
+byte4: imm
+```
+
+**Flags affected:** None
+
+**Example:** `LOADBRD R2, 0xF800`
+
+---
+
+#### LOADBRM
+
+**Description:** Load byte from memory address in base register to destination register (zero-extended).
+
+**Operation:** `dst ← 0x00FF & mem[base]`
+
+**Encoding:**
+```
+byte1: 0x1D
+byte2: dst (4 bits) | base (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `LOADBRM R2, R0`
