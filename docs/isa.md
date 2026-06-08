@@ -106,7 +106,7 @@ Byte 3-4: [16 bits: immediate or address]
 | [DIVR](#divr)      | Divides R by R                       | 0x28   |
 | [DIVI](#divi)      | Divides R by I                       | 0x29   |
 
-### Bit ops
+### Bit Operations
 
 | Mnemonic           | Instruction                          | Opcode |
 |--------------------|--------------------------------------|--------|
@@ -976,7 +976,7 @@ byte2: dst (4 bits) | 0 (4 bits)
 
 **Flags affected:** None
 
-**Example:** `SHR R1, R0`
+**Example:** `SHR R1`
 
 ---
 
@@ -994,4 +994,154 @@ byte2: dst (4 bits) | 0 (4 bits)
 
 **Flags affected:** None
 
-**Example:** `SHL R1, R0`
+**Example:** `SHL R1`
+
+---
+
+### SP and BP ops
+
+#### SETSP
+
+**Description:** Set stack pointer from source register.
+
+**Operation:** `SP ← src`
+
+**Encoding:**
+```
+byte1: 0x40
+byte2: src (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `SETSP R5`
+
+---
+
+#### GETSP
+
+**Description:** Get stack pointer value into destination register.
+
+**Operation:** `dst ← SP`
+
+**Encoding:**
+```
+byte1: 0x41
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `GETSP R2`
+
+---
+
+#### ADDSP
+
+**Description:** Add immediate value to stack pointer.
+
+**Operation:** `SP ← SP + imm`
+
+**Encoding:**
+```
+byte1: 0x42
+byte2: imm (low byte)
+byte3: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `ADDSP 0x0004`
+
+---
+
+#### SUBSP
+
+**Description:** Subtract immediate value from stack pointer.
+
+**Operation:** `SP ← SP - imm`
+
+**Encoding:**
+```
+byte1: 0x43
+byte2: imm (low byte)
+byte3: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `SUBSP 0x0002`
+
+---
+
+#### SETBP
+
+**Description:** Set base pointer from source register.
+
+**Operation:** `BP ← src`
+
+**Encoding:**
+```
+byte1: 0x44
+byte2: src (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `SETBP R5`
+
+---
+
+#### GETBP
+
+**Description:** Get base pointer value into destination register.
+
+**Operation:** `dst ← BP`
+
+**Encoding:**
+```
+byte1: 0x45
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `GETBP R2`
+
+---
+
+#### ADDBP
+
+**Description:** Add immediate value to base pointer.
+
+**Operation:** `BP ← BP + imm`
+
+**Encoding:**
+```
+byte1: 0x46
+byte2: imm (low byte)
+byte3: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `ADDBP 0x0004`
+
+---
+
+#### SUBBP
+
+**Description:** Subtract immediate value from base pointer.
+
+**Operation:** `BP ← BP - imm`
+
+**Encoding:**
+```
+byte1: 0x47
+byte2: imm (low byte)
+byte3: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `SUBBP 0x0002`
