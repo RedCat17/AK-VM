@@ -381,7 +381,7 @@ byte1: 0x0A
 **Encoding:**
 ```
 byte1: 0x10
-byte2: src (4 bits) | dst (4 bits)
+byte2: dst (4 bits) | src (4 bits)
 ```
 
 **Flags affected:** None
@@ -636,6 +636,8 @@ byte2: dst (4 bits) | base (4 bits)
 
 **Example:** `LOADBRM R2, R0`
 
+---
+
 ### Arithmetics
 
 #### ADDR
@@ -823,3 +825,173 @@ byte4: imm (high byte)
 **Flags affected:** Zero, Sign, Carry
 
 **Example:** `DIVI R3, 0x0002`
+
+---
+
+### Bit ops
+
+#### ANDR
+
+**Description:** Bitwise AND between source and destination registers, result stored in destination.
+
+**Operation:** `dst ← dst & src`
+
+**Encoding:**
+```
+byte1: 0x30
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `ANDR R1, R0`
+
+---
+
+#### ANDI
+
+**Description:** Bitwise AND between destination register and immediate value, result stored in destination.
+
+**Operation:** `dst ← dst & imm`
+
+**Encoding:**
+```
+byte1: 0x31
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `ANDI R2, 0x00FF`
+
+---
+
+#### ORR
+
+**Description:** Bitwise OR between source and destination registers, result stored in destination.
+
+**Operation:** `dst ← dst | src`
+
+**Encoding:**
+```
+byte1: 0x32
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `ORR R1, R0`
+
+---
+
+#### ORI
+
+**Description:** Bitwise OR between destination register and immediate value, result stored in destination.
+
+**Operation:** `dst ← dst | imm`
+
+**Encoding:**
+```
+byte1: 0x33
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `ORI R2, 0x8000`
+
+---
+
+#### XORR
+
+**Description:** Bitwise XOR between source and destination registers, result stored in destination.
+
+**Operation:** `dst ← dst ^ src`
+
+**Encoding:**
+```
+byte1: 0x34
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `XORR R1, R0`
+
+---
+
+#### XORI
+
+**Description:** Bitwise XOR between destination register and immediate value, result stored in destination.
+
+**Operation:** `dst ← dst ^ imm`
+
+**Encoding:**
+```
+byte1: 0x35
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** None
+
+**Example:** `XORI R3, 0xFFFF`
+
+---
+
+#### NOT
+
+**Description:** Bitwise NOT of register.
+
+**Operation:** `dst ← ~dst`
+
+**Encoding:**
+```
+byte1: 0x36
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `NOT R1`
+
+---
+
+#### SHR
+
+**Description:** Shift destination register right by 1 bit.
+
+**Operation:** `dst ← dst >> 1`
+
+**Encoding:**
+```
+byte1: 0x37
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `SHR R1, R0`
+
+---
+
+#### SHL
+
+**Description:** Shift destination register left by 1 bit.
+
+**Operation:** `dst ← dst << 1`
+
+**Encoding:**
+```
+byte1: 0x38
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** None
+
+**Example:** `SHL R1, R0`
