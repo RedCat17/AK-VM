@@ -635,3 +635,191 @@ byte2: dst (4 bits) | base (4 bits)
 **Flags affected:** None
 
 **Example:** `LOADBRM R2, R0`
+
+### Arithmetics
+
+#### ADDR
+
+**Description:** Adds source register to destination register.
+
+**Operation:** `dst ← dst + src`
+
+**Encoding:**
+```
+byte1: 0x20
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `ADDR R1, R0`
+
+---
+
+#### ADDI
+
+**Description:** Add immediate value to destination register.
+
+**Operation:** `dst ← dst + imm`
+
+**Encoding:**
+```
+byte1: 0x21
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `ADDI R2, 0x0010`
+
+---
+
+#### SUBR
+
+**Description:** Subtract source register from destination register.
+
+**Operation:** `dst ← dst - src`
+
+**Encoding:**
+```
+byte1: 0x22
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `SUBR R3, R1`
+
+---
+
+#### SUBI
+
+**Description:** Subtract immediate value from destination register.
+
+**Operation:** `dst ← dst - imm`
+
+**Encoding:**
+```
+byte1: 0x23
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `SUBI R4, 0x0005`
+
+---
+
+#### INC
+
+**Description:** Increment destination register by 1.
+
+**Operation:** `dst ← dst + 1`
+
+**Encoding:**
+```
+byte1: 0x24
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `INC R2`
+
+---
+
+#### DEC
+
+**Description:** Decrement destination register by 1.
+
+**Operation:** `dst ← dst - 1`
+
+**Encoding:**
+```
+byte1: 0x25
+byte2: dst (4 bits) | 0 (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `DEC R3`
+
+---
+
+#### MULR
+
+**Description:** Multiply destination register by source register.
+
+**Operation:** `dst ← dst × src`
+
+**Encoding:**
+```
+byte1: 0x26
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `MULR R1, R0`
+
+---
+
+#### MULI
+
+**Description:** Multiply destination register by immediate value.
+
+**Operation:** `dst ← dst × imm`
+
+**Encoding:**
+```
+byte1: 0x27
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `MULI R5, 0x0004`
+
+---
+
+#### DIVR
+
+**Description:** Divide destination register by source register.
+
+**Operation:** `dst ← dst ÷ src`
+
+**Encoding:**
+```
+byte1: 0x28
+byte2: dst (4 bits) | src (4 bits)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `DIVR R2, R1`
+
+---
+
+#### DIVI
+
+**Description:** Divide destination register by immediate value.
+
+**Operation:** `dst ← dst ÷ imm`
+
+**Encoding:**
+```
+byte1: 0x29
+byte2: dst (4 bits) | 0 (4 bits)
+byte3: imm (low byte)
+byte4: imm (high byte)
+```
+
+**Flags affected:** Zero, Sign, Carry
+
+**Example:** `DIVI R3, 0x0002`
