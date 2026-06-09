@@ -5,18 +5,10 @@
 .DEF HEAP_ADDR 0x4000
 
 JMP start
-msg_enter_1:
-.STR "Enter first number: "
-.DB 0
-msg_enter_2:
-.STR "Enter second number: "
-.DB 0
-msg_sum:
-.STR "Sum: "
-.DB 0
-msg_error:
-.STR "Error!"
-.DB 0
+msg_enter_1: .STR "Enter first number: "
+msg_enter_2: .STR "Enter second number: "
+msg_sum:     .STR "Sum: "
+msg_error:   .STR "Error!"
 
 ; ============================================================================================
 ; READ_STRING

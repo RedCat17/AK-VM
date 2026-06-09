@@ -358,6 +358,15 @@ def verify_ident(value: str):
     for char in value:
         if not (char.isalnum() or char == '_'):
             raise ValueError(f'Illegal characters in ident: {value}')
+    
+
+def is_ident(value: str):
+    if value[0].isnumeric():
+        return False
+    for char in value:
+        if not (char.isalnum() or char == '_'):
+            return False
+    return True
 
 def verify_number(value: str):
     if value.startswith(('0x', '0b')):
@@ -671,7 +680,7 @@ def encode_data_string(record, verbose=False):
 
     # for ch in string:
     #     record.encoded_bytes.append(ord(ch))  
-    record.encoded_bytes = string.encode("utf-8")
+    record.encoded_bytes = string.encode("utf-8") + b'\x00'
 
 def generate_line(record):
     addr_col = f"{(record.address):05X}"
@@ -802,19 +811,32 @@ def main():
     cur_address = 0
     errors = []
     for i, line in enumerate(lines, start=1):
-        if not line.strip() or line.startswith(';'):
-            continue
         raw = line.split(';')[0].strip() # remove comments
+
+        if not raw:
+            continue
+
         try:            
-            # if label
-            if raw.endswith(':'):
-                label = raw[:-1]
-                if label in labels:
-                    raise AssembleError(f"Duplicate label: {label}", i, raw)
-                labels[label] = cur_address
+            label = None
+            rest = raw
+
+            # extract label if present
+            if ':' in rest:
+                potential_label, potential_rest = rest.split(':', 1)
+
+                if is_ident(potential_label):
+                    label = potential_label
+                    rest = rest.strip()
+
+                    if label in labels:
+                        raise AssembleError(f"Duplicate label: {label}", i, raw)
+                    labels[label] = cur_address
+
+                    rest = potential_rest
+            
             # if instruction or data
-            else:                
-                instruction, *rest = raw.split(None, 1)
+            if rest:                
+                instruction, *rest = rest.split(None, 1)
                 match instruction:
                     # data
                     case '.DB':
@@ -832,7 +854,7 @@ def main():
                         cur_address += size
                     case '.STR':
                         string = rest[0].strip('"')
-                        size = len(string.encode("utf-8"))
+                        size = len(string.encode("utf-8")) + 1
                         records.append(IRRecord(
                             RecordTypes.DATA_STRING, 
                             cur_address, 
