@@ -781,13 +781,13 @@ def main():
     # Console argument parsing
     parser = argparse.ArgumentParser(description='Assembler for AK-VM-1')
 
-    parser.add_argument("input_file", help="Path to input source file")
-    parser.add_argument("-o", "--output", help="Path to assembled output file")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument("input_file", help="path to input source file")
+    parser.add_argument("-o", "--output", help="path to assembled output file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="enable verbose output")
     parser.add_argument(
         "-f", "--format", 
         choices=["bin", "obj"],
-        help="Output format",
+        help="output format",
         required=True)
 
     args = parser.parse_args()
@@ -953,7 +953,7 @@ def main():
             # Encode binary
             output = generate_binary(records)
 
-            output_path = args.output or args.input_file + '.bin'
+            output_path = args.output or args.input_file.strip('.asm') + '.bin'
             
             if args.verbose:
                 print(f"\n{len(output)} bytes total.")

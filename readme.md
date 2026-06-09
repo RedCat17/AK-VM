@@ -28,10 +28,10 @@ Licensed under MIT.
 
 ## Prerequisites 
 - C compiler (Clang or other)
-- Python 3.6+
+- Python 3.10+
 
 ## Building
-```
+```bash
 git clone https://github.com/RedCat17/AK-VM.git
 cd AK-VM
 clang akvm.c -o build/akvm -Wall -Wextra
@@ -39,37 +39,38 @@ clang akvm.c -o build/akvm -Wall -Wextra
 
 ## Usage
 Assembling program.asm into output.bin binary:
-```
+```bash
 python asm.py program.asm -o output.bin -f bin
 ```
+
 Assembling object file:
-```
+```bash
 python asm.py program.asm -o output.bin -f obj
 ```
 
 Running output.bin:
-```
+```bash
 ./build/akvm output.bin
 ```
 
 Debug mode:
-```
+```bash
 ./build/akvm program.bin -d
 ```
 
 Redirecting debug output to file:
-```
+```bash
 ./build/akvm program.bin -d 2> output.txt
 ```
 
 Quick example for Hello World:
-```
-python asm.py examples/basic/hello.asm -o examples/basic/hello.bin -f bin
-./build/akvm examples/basic/hello.bin
+```bash
+python asm.py examples/hello.asm -o examples/hello.bin -f bin
+./build/akvm examples/hello.bin
 ```
 
 Calculator example:
-```
+```bash
 python asm.py examples/calc.asm -o examples/calc.bin -f bin
 ./build/akvm examples/calc.bin
 ```

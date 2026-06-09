@@ -7,7 +7,7 @@
 - 64 KB flat byte-addressable memory
 - Stack (grows downwards)
 - Variable-length instructions (1, 2, 4-byte)
-- Functions (via CALL, args passed via stack)
+- Functions (via CALL, args passed via stack or registers)
 - Serial I/O
 - Little-endian
 
