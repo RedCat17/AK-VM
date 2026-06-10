@@ -12,6 +12,8 @@ for t in "$TEST_DIR"/*/ ; do
     $ASM "$t/$name.asm" -o "$t/$name.bin" -f bin || { echo "  ASSEMBLY FAIL"; FAIL=$((FAIL+1)); continue; }
     # Run VM, capture output
     $VM "$t/$name.bin" -t > "$t/output.actual" 2>&1
+    # Remove binary 
+    rm "$t/$name.bin"
     # Compare
     if diff -u "$t/output.expected" "$t/output.actual" > "$t/diff.txt"; then
         echo "  PASS"

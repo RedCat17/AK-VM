@@ -15,7 +15,8 @@ $(VM_BIN): $(VM_SRC)
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean: 
-	rm -f $(VM_BIN) *.o *.obj output.actual diff.txt
+	rm -f $(VM_BIN)
+	find . -type f \( -name "*.bin" -o -name "*.actual" -o -name "*.diff.txt" -o -name "*.o" -o -name "*.obj" \) -delete
 
 run: $(VM_BIN)
 	@if [ -z "$(FILE)" ]; then \
