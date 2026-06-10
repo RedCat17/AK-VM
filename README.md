@@ -34,7 +34,7 @@ Licensed under MIT.
 ```bash
 git clone https://github.com/RedCat17/AK-VM.git
 cd AK-VM
-clang akvm.c -o build/akvm -Wall -Wextra
+make
 ```
 
 ## Usage
@@ -65,14 +65,17 @@ Redirecting debug output to file:
 
 Quick example for Hello World:
 ```bash
-python asm.py examples/hello.asm -o examples/hello.bin -f bin
-./build/akvm examples/hello.bin
+make run FILE=examples/hello.asm
 ```
 
 Calculator example:
 ```bash
-python asm.py examples/calc.asm -o examples/calc.bin -f bin
-./build/akvm examples/calc.bin
+make run FILE=examples/calc.asm
+```
+
+Run tests:
+```bash
+make test
 ```
 
 ## Code example
