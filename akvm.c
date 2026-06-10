@@ -832,7 +832,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
             debug = 1;
         } 
-        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--testing") == 0) {
+        else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--testing") == 0) {
             testing = 1;
         } 
         else if (argv[i][0] == '-') {

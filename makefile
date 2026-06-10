@@ -25,7 +25,7 @@ run: $(VM_BIN)
 	fi
 	$(PYTHON) $(ASSEMBLER) $(FILE) -o build/program.bin -f bin
 	./$(VM_BIN) build/program.bin
-	rm build/program.bin
+# 	rm build/program.bin
 
 test: $(VM_BIN)
 	@cd tests && ./run_tests.sh
