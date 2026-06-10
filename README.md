@@ -25,6 +25,10 @@ Licensed under MIT.
 - pattern matching based on operands (e.g. MOV -> MOVR or MOVI)
 - detailed error handling with line numbers
 - object files
+### Other
+- makefile for easy building, assembling, running and testing
+- automated black-box testing to expected output
+- set of example programs
 
 ## Prerequisites 
 - C compiler (Clang or other)
