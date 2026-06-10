@@ -37,3 +37,16 @@ asm.py [-h] [-o OUTPUT] [-v] -f {bin,obj} input_file
 ```bash
 python asm.py examples/hello.asm -o examples/hello.bin -f bin
 ```
+
+## Syntax
+
+Assembler translates code line-by-line. Each line be empty or contain label, instruction/directive and comment.
+
+Formally, syntax is following:
+```
+line        = [label] [instruction | directive] [comment]
+
+label       = ident , ":" ; (*e.g. start:*)
+instruction = mnemonic , operand , {', ' , operand}
+directive   = ".DB" | ".STR" | ".DEF" , arguments
+```
