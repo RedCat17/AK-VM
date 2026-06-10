@@ -825,11 +825,15 @@ void run_vm(VM *vm) {
 
 int main(int argc, char *argv[]) {
     int debug = 0;
+    int testing = 0;
     const char* filename = NULL;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
             debug = 1;
+        } 
+        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--testing") == 0) {
+            testing = 1;
         } 
         else if (argv[i][0] == '-') {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
@@ -840,13 +844,15 @@ int main(int argc, char *argv[]) {
     }
 
     if (!filename) {
-        fprintf(stderr, "Usage: %s [-d|--debug] <binary file>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-d|--debug] [-t|--testing] <binary file>\n", argv[0]);
         return 1;
     }
 
-    printf("Debug mode: %s\n", debug ? "on" : "off");
-    printf("File: %s\n", filename);
-    printf("===========\n");
+    if (!testing) {
+        printf("Debug mode: %s\n", debug ? "on" : "off");
+        printf("File: %s\n", filename);
+        printf("===========\n");
+    }
 
     VM vm;
     init_vm(&vm);
@@ -866,6 +872,6 @@ int main(int argc, char *argv[]) {
         dump_vm_verbose(&vm);
     }
     
-    printf("\n");
+    if (!testing) printf("\n");
     return 0;
 }
