@@ -11,7 +11,11 @@ for t in "$TEST_DIR"/*/ ; do
     # Assemble
     $ASM "$t/$name.asm" -o "$t/$name.bin" -f bin || { echo "  ASSEMBLY FAIL"; FAIL=$((FAIL+1)); continue; }
     # Run VM, capture output
-    $VM "$t/$name.bin" -t > "$t/output.actual" 2>&1
+    if [ -f "$t/input.txt" ]; then
+        "$VM" "$t/$name.bin" -t < "$t/input.txt" > "$t/output.actual" 2>&1
+    else
+        "$VM" "$t/$name.bin" -t > "$t/output.actual" 2>&1
+    fi
     # Remove binary 
     rm "$t/$name.bin"
     # Compare

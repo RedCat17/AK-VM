@@ -219,8 +219,11 @@ int exec_load_program(VM *vm, const char *filename) {
 
 // dump CPU state to console
 void dump_cpu(CPU *cpu) {
-    fprintf(stderr, "PC: %X; SP: %X; BP: %X; Flags: %b;\n", cpu->pc, cpu->sp, cpu->bp, cpu->flags);
-    fprintf(stderr, "Registers: ");
+    fprintf(stderr, "PC: %X; SP: %X; BP: %X; Flags:", cpu->pc, cpu->sp, cpu->bp);
+    if (cpu->flags & ZERO_FLAG) fprintf(stderr, " Z");
+    if (cpu->flags & CARRY_FLAG) fprintf(stderr, " C");
+    if (cpu->flags & SIGN_FLAG) fprintf(stderr, " S");
+    fprintf(stderr, "\nRegisters: ");
     for (uint8_t i = 0; i < REG_COUNT; i++) {
         fprintf(stderr, "%d ", cpu->registers[i]);
     }
