@@ -16,39 +16,39 @@
 #define TX_ADDRESS              0xF801 // Reading from here reads from console
 
 // FLAGS register is split into bits using these bitmasks:
-#define ZERO_FLAG  0b10000000
-#define CARRY_FLAG 0b01000000
-#define SIGN_FLAG  0b00100000
+#define ZERO_FLAG   0x80  // 1000 0000
+#define CARRY_FLAG  0x40  // 0100 0000
+#define SIGN_FLAG   0x20  // 0010 0000
 // WIP
 
 // Masks for register encoding in bytecode:
-#define REG1 0b11110000
-#define REG2 0b00001111
+#define REG1 0xF0 // bits 1111 0000
+#define REG2 0x0F // bits 0000 1111
 
 // Opcodes
 // Control flow
-#define OPCODE_NOP     0x00
-#define OPCODE_HLT     0x01
-#define OPCODE_CMPR   0x02
-#define OPCODE_CMPI   0x03
-#define OPCODE_JMP     0x04
-#define OPCODE_JZ     0x05
-#define OPCODE_JNZ     0x06
-#define OPCODE_JC     0x07
-#define OPCODE_JS     0x08
-#define OPCODE_CALL    0x09
-#define OPCODE_RET     0x0A
+#define OPCODE_NOP      0x00
+#define OPCODE_HLT      0x01
+#define OPCODE_CMPR     0x02
+#define OPCODE_CMPI     0x03
+#define OPCODE_JMP      0x04
+#define OPCODE_JZ       0x05
+#define OPCODE_JNZ      0x06
+#define OPCODE_JC       0x07
+#define OPCODE_JS       0x08
+#define OPCODE_CALL     0x09
+#define OPCODE_RET      0x0A
 
 // Memory
-#define OPCODE_MOVR   0x10
-#define OPCODE_MOVI   0x11
-#define OPCODE_STORDR  0x12
-#define OPCODE_STORMI  0x13
-#define OPCODE_STORMR  0x14
-#define OPCODE_LOADRD  0x15
-#define OPCODE_LOADRM  0x16
-#define OPCODE_PUSH   0x17
-#define OPCODE_POP    0x18
+#define OPCODE_MOVR     0x10
+#define OPCODE_MOVI     0x11
+#define OPCODE_STORDR   0x12
+#define OPCODE_STORMI   0x13
+#define OPCODE_STORMR   0x14
+#define OPCODE_LOADRD   0x15
+#define OPCODE_LOADRM   0x16
+#define OPCODE_PUSH     0x17
+#define OPCODE_POP      0x18
 #define OPCODE_STORBDR  0x19
 #define OPCODE_STORBMI  0x1A
 #define OPCODE_STORBMR  0x1B
@@ -56,37 +56,37 @@
 #define OPCODE_LOADBRM  0x1D
 
 // Arithmetics
-#define OPCODE_ADDR   0x20
-#define OPCODE_ADDI   0x21
-#define OPCODE_SUBR   0x22
-#define OPCODE_SUBI   0x23
-#define OPCODE_INC    0x24
-#define OPCODE_DEC    0x25
-#define OPCODE_MULR   0x26
-#define OPCODE_MULI   0x27
-#define OPCODE_DIVR   0x28
-#define OPCODE_DIVI   0x29
+#define OPCODE_ADDR     0x20
+#define OPCODE_ADDI     0x21
+#define OPCODE_SUBR     0x22
+#define OPCODE_SUBI     0x23
+#define OPCODE_INC      0x24
+#define OPCODE_DEC      0x25
+#define OPCODE_MULR     0x26
+#define OPCODE_MULI     0x27
+#define OPCODE_DIVR     0x28
+#define OPCODE_DIVI     0x29
 
 // Bit ops
-#define OPCODE_ANDR   0x30
-#define OPCODE_ANDI   0x31
-#define OPCODE_ORR    0x32
-#define OPCODE_ORI    0x33
-#define OPCODE_XORR   0x34
-#define OPCODE_XORI   0x35
-#define OPCODE_NOT    0x36
-#define OPCODE_SHR    0x37
-#define OPCODE_SHL    0x38
+#define OPCODE_ANDR     0x30
+#define OPCODE_ANDI     0x31
+#define OPCODE_ORR      0x32
+#define OPCODE_ORI      0x33
+#define OPCODE_XORR     0x34
+#define OPCODE_XORI     0x35
+#define OPCODE_NOT      0x36
+#define OPCODE_SHR      0x37
+#define OPCODE_SHL      0x38
 
 // SP and BP ops
-#define OPCODE_SETSP  0x40
-#define OPCODE_GETSP  0x41
-#define OPCODE_ADDSP  0x42
-#define OPCODE_SUBSP  0x43
-#define OPCODE_SETBP  0x44
-#define OPCODE_GETBP  0x45
-#define OPCODE_ADDBP  0x46
-#define OPCODE_SUBBP  0x47
+#define OPCODE_SETSP    0x40
+#define OPCODE_GETSP    0x41
+#define OPCODE_ADDSP    0x42
+#define OPCODE_SUBSP    0x43
+#define OPCODE_SETBP    0x44
+#define OPCODE_GETBP    0x45
+#define OPCODE_ADDBP    0x46
+#define OPCODE_SUBBP    0x47
 
 // Encoding formats enum
 typedef enum {
@@ -106,64 +106,64 @@ typedef struct {
 // Opcode table
 OpcodeData opcode_table[256] = {
     // Control flow
-    [OPCODE_NOP]   = {"NOP",   FORMAT_NONE},
-    [OPCODE_HLT]   = {"HLT",   FORMAT_NONE},
-    [OPCODE_CMPR] = {"CMPR", FORMAT_REG_REG},
-    [OPCODE_CMPI] = {"CMPI", FORMAT_REG_IMM},
-    [OPCODE_JMP]   = {"JMP",   FORMAT_IMM},
-    [OPCODE_JZ]   = {"JZ",   FORMAT_IMM},
-    [OPCODE_JNZ]   = {"JNZ",   FORMAT_IMM},
-    [OPCODE_JC]   = {"JC",   FORMAT_IMM},
-    [OPCODE_JS]   = {"JS",   FORMAT_IMM},
-    [OPCODE_CALL]  = {"CALL",  FORMAT_IMM},
-    [OPCODE_RET]   = {"RET",   FORMAT_NONE},
+    [OPCODE_NOP]     = {"NOP",     FORMAT_NONE},
+    [OPCODE_HLT]     = {"HLT",     FORMAT_NONE},
+    [OPCODE_CMPR]    = {"CMPR",    FORMAT_REG_REG},
+    [OPCODE_CMPI]    = {"CMPI",    FORMAT_REG_IMM},
+    [OPCODE_JMP]     = {"JMP",     FORMAT_IMM},
+    [OPCODE_JZ]      = {"JZ",      FORMAT_IMM},
+    [OPCODE_JNZ]     = {"JNZ",     FORMAT_IMM},
+    [OPCODE_JC]      = {"JC",      FORMAT_IMM},
+    [OPCODE_JS]      = {"JS",      FORMAT_IMM},
+    [OPCODE_CALL]    = {"CALL",    FORMAT_IMM},
+    [OPCODE_RET]     = {"RET",     FORMAT_NONE},
     // Memory
-    [OPCODE_MOVR]  = {"MOVR",  FORMAT_REG_REG},
-    [OPCODE_MOVI]  = {"MOVI",  FORMAT_REG_IMM},
-    [OPCODE_STORDR] = {"STORDR", FORMAT_REG_IMM},  // STORDI not included as it would require 2 immediate values
-    [OPCODE_STORMI] = {"STORMI", FORMAT_REG_IMM},
-    [OPCODE_STORMR] = {"STORMR", FORMAT_REG_REG},
-    [OPCODE_LOADRD] = {"LOADRD", FORMAT_REG_IMM},
-    [OPCODE_LOADRM] = {"LOADRM", FORMAT_REG_REG},
-    [OPCODE_PUSH]  = {"PUSH",  FORMAT_REG},
-    [OPCODE_POP]   = {"POP",   FORMAT_REG},
+    [OPCODE_MOVR]    = {"MOVR",    FORMAT_REG_REG},
+    [OPCODE_MOVI]    = {"MOVI",    FORMAT_REG_IMM},
+    [OPCODE_STORDR]  = {"STORDR",  FORMAT_REG_IMM},  // STORDI not included as it would require 2 immediate values
+    [OPCODE_STORMI]  = {"STORMI",  FORMAT_REG_IMM},
+    [OPCODE_STORMR]  = {"STORMR",  FORMAT_REG_REG},
+    [OPCODE_LOADRD]  = {"LOADRD",  FORMAT_REG_IMM},
+    [OPCODE_LOADRM]  = {"LOADRM",  FORMAT_REG_REG},
+    [OPCODE_PUSH]    = {"PUSH",    FORMAT_REG},
+    [OPCODE_POP]     = {"POP",     FORMAT_REG},
     [OPCODE_STORBDR] = {"STORBDR", FORMAT_REG_IMM},
     [OPCODE_STORBMI] = {"STORBMI", FORMAT_REG_IMM},
     [OPCODE_STORBMR] = {"STORBMR", FORMAT_REG_REG},
     [OPCODE_LOADBRD] = {"LOADBRD", FORMAT_REG_IMM},
     [OPCODE_LOADBRM] = {"LOADBRM", FORMAT_REG_REG},
     // Arithmetics
-    [OPCODE_ADDR]  = {"ADDR",  FORMAT_REG_REG},
-    [OPCODE_ADDI]  = {"ADDI",  FORMAT_REG_IMM},
-    [OPCODE_SUBR]  = {"SUBR",  FORMAT_REG_REG},
-    [OPCODE_SUBI]  = {"SUBI",  FORMAT_REG_IMM},
-    [OPCODE_INC]   = {"INC",   FORMAT_REG},
-    [OPCODE_DEC]   = {"DEC",   FORMAT_REG},
-    [OPCODE_MULR]  = {"MULR",  FORMAT_REG_REG},
-    [OPCODE_MULI]  = {"MULI",  FORMAT_REG_IMM},
-    [OPCODE_DIVR]  = {"DIVR",  FORMAT_REG_REG},
-    [OPCODE_DIVI]  = {"DIVI",  FORMAT_REG_IMM},
+    [OPCODE_ADDR]    = {"ADDR",    FORMAT_REG_REG},
+    [OPCODE_ADDI]    = {"ADDI",    FORMAT_REG_IMM},
+    [OPCODE_SUBR]    = {"SUBR",    FORMAT_REG_REG},
+    [OPCODE_SUBI]    = {"SUBI",    FORMAT_REG_IMM},
+    [OPCODE_INC]     = {"INC",     FORMAT_REG},
+    [OPCODE_DEC]     = {"DEC",     FORMAT_REG},
+    [OPCODE_MULR]    = {"MULR",    FORMAT_REG_REG},
+    [OPCODE_MULI]    = {"MULI",    FORMAT_REG_IMM},
+    [OPCODE_DIVR]    = {"DIVR",    FORMAT_REG_REG},
+    [OPCODE_DIVI]    = {"DIVI",    FORMAT_REG_IMM},
 
     // Bit ops
-    [OPCODE_ANDR]  = {"ANDR",  FORMAT_REG_REG},
-    [OPCODE_ANDI]  = {"ANDI",  FORMAT_REG_IMM},
-    [OPCODE_ORR]   = {"ORR",   FORMAT_REG_REG},
-    [OPCODE_ORI]   = {"ORI",   FORMAT_REG_IMM},
-    [OPCODE_XORR]  = {"XORR",  FORMAT_REG_REG},
-    [OPCODE_XORI]  = {"XORI",  FORMAT_REG_IMM},
-    [OPCODE_NOT]   = {"NOT",   FORMAT_REG},
-    [OPCODE_SHR]   = {"SHR",   FORMAT_REG},
-    [OPCODE_SHL]   = {"SHL",   FORMAT_REG},
+    [OPCODE_ANDR]    = {"ANDR",    FORMAT_REG_REG},
+    [OPCODE_ANDI]    = {"ANDI",    FORMAT_REG_IMM},
+    [OPCODE_ORR]     = {"ORR",     FORMAT_REG_REG},
+    [OPCODE_ORI]     = {"ORI",     FORMAT_REG_IMM},
+    [OPCODE_XORR]    = {"XORR",    FORMAT_REG_REG},
+    [OPCODE_XORI]    = {"XORI",    FORMAT_REG_IMM},
+    [OPCODE_NOT]     = {"NOT",     FORMAT_REG},
+    [OPCODE_SHR]     = {"SHR",     FORMAT_REG},
+    [OPCODE_SHL]     = {"SHL",     FORMAT_REG},
 
     // SP and BP ops
-    [OPCODE_SETSP]  = {"SETSP",  FORMAT_REG},
-    [OPCODE_GETSP]  = {"GETSP",  FORMAT_REG},
-    [OPCODE_ADDSP]  = {"ADDSP",  FORMAT_IMM},
-    [OPCODE_SUBSP]  = {"SUBSP",  FORMAT_IMM},
-    [OPCODE_SETBP]  = {"SETBP",  FORMAT_REG},
-    [OPCODE_GETBP]  = {"GETBP",  FORMAT_REG},
-    [OPCODE_ADDBP]  = {"ADDBP",  FORMAT_IMM},
-    [OPCODE_SUBBP]  = {"SUBBP",  FORMAT_IMM},
+    [OPCODE_SETSP]   = {"SETSP",   FORMAT_REG},
+    [OPCODE_GETSP]   = {"GETSP",   FORMAT_REG},
+    [OPCODE_ADDSP]   = {"ADDSP",   FORMAT_IMM},
+    [OPCODE_SUBSP]   = {"SUBSP",   FORMAT_IMM},
+    [OPCODE_SETBP]   = {"SETBP",   FORMAT_REG},
+    [OPCODE_GETBP]   = {"GETBP",   FORMAT_REG},
+    [OPCODE_ADDBP]   = {"ADDBP",   FORMAT_IMM},
+    [OPCODE_SUBBP]   = {"SUBBP",   FORMAT_IMM},
 };
 
 // CPU struct stores CPU internal data: registers, PC, SP, BP and flags
@@ -198,8 +198,8 @@ void init_vm(VM *vm) {
     vm->debug = 0;
 }
 
-// Opens program from file and executes it byte-by-byte
-int exec_load_program(VM *vm, const char *filename) {
+// Opens program from file and loads it to memory it byte-by-byte
+int load_program(VM *vm, const char *filename) {
     FILE *file = fopen(filename, "rb");
 
     if (!file) {
@@ -213,6 +213,7 @@ int exec_load_program(VM *vm, const char *filename) {
         vm->memory[i++] = byte;
         byte = fgetc(file);
     }
+    
     fclose(file);
     return 0;
 }
@@ -223,6 +224,7 @@ void dump_cpu(CPU *cpu) {
     if (cpu->flags & ZERO_FLAG) fprintf(stderr, " Z");
     if (cpu->flags & CARRY_FLAG) fprintf(stderr, " C");
     if (cpu->flags & SIGN_FLAG) fprintf(stderr, " S");
+    
     fprintf(stderr, "\nRegisters: ");
     for (uint8_t i = 0; i < REG_COUNT; i++) {
         fprintf(stderr, "%d ", cpu->registers[i]);
@@ -244,7 +246,7 @@ void dump_vm(VM *vm) {
     fprintf(stderr, "\n");
 }
 
-// dump VM state to console
+// dump VM state to console (detailed)
 void dump_vm_verbose(VM *vm) {
     dump_cpu(&vm->cpu);
     fprintf(stderr, "\nProgram space: ");
@@ -290,24 +292,28 @@ void set_flags_add(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     }
 }
 
+// execute ADD operation
 uint16_t cpu_add(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 + value2;
     set_flags_add(cpu, value1, value2, result);
     return result;
 }
 
+// execute SUB operation
 uint16_t cpu_sub(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 - value2;
     set_flags_sub(cpu, value1, value2, result);
     return result;
 }
 
+// execute MUL operation
 uint16_t cpu_mul(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result = value1 * value2;
     set_flags_add(cpu, value1, value2, result);
     return result;
 }
 
+// execute DIV operation
 uint16_t cpu_div(CPU *cpu, uint16_t value1, uint16_t value2) {
     uint16_t result;
     if (value2 == 0) {
@@ -319,6 +325,7 @@ uint16_t cpu_div(CPU *cpu, uint16_t value1, uint16_t value2) {
     return result;
 }
 
+// execute STOR operation
 int exec_stor(VM *vm, uint16_t address, uint16_t value) {
     if (address < HEAP_ADDRESS) {
         fprintf(stderr, "Address out of bounds! Can't write into program space.\n");
@@ -344,6 +351,7 @@ int exec_stor(VM *vm, uint16_t address, uint16_t value) {
     return 0;
 }
 
+// execute LOAD operation
 int exec_load(VM *vm, uint8_t reg, uint16_t address) {
     if (address == RX_ADDRESS) {
         vm->cpu.registers[reg] = getchar();
@@ -353,6 +361,7 @@ int exec_load(VM *vm, uint8_t reg, uint16_t address) {
     return 0;
 }
 
+// execute STORB operation
 int exec_storb(VM *vm, uint16_t address, uint8_t value) {
     if (address < HEAP_ADDRESS) {
         fprintf(stderr, "Address out of bounds! Can't write into program space.\n");
@@ -373,6 +382,7 @@ int exec_storb(VM *vm, uint16_t address, uint8_t value) {
     return 0;
 }
 
+// execute LOADB operation
 int exec_loadb(VM *vm, uint8_t reg, uint16_t address) {
     if (address == RX_ADDRESS) {
         vm->cpu.registers[reg] = getchar();
@@ -382,6 +392,7 @@ int exec_loadb(VM *vm, uint8_t reg, uint16_t address) {
     return 0;
 }
 
+// execute PUSH operation
 int exec_push(VM *vm, uint16_t value) {
     if (vm->cpu.sp - 2 < STACK_END) {
         fprintf(stderr, "Stack overflow!\n");
@@ -393,6 +404,7 @@ int exec_push(VM *vm, uint16_t value) {
     return 0;
 }
 
+// execute POP operation
 int exec_pop(VM *vm, uint8_t reg) {
     if (vm->cpu.sp > MEMORY_SIZE - 2) {
         fprintf(stderr, "Stack underflow!\n");
@@ -403,6 +415,7 @@ int exec_pop(VM *vm, uint8_t reg) {
     return 0;
 }
 
+// execute CALL operation
 int exec_call(VM *vm, uint16_t address) {
     if (vm->cpu.sp - 2  < STACK_END) {
         fprintf(stderr, "Stack overflow!\n");
@@ -415,6 +428,7 @@ int exec_call(VM *vm, uint16_t address) {
     return 0;
 }
 
+// execute RET operation
 int exec_ret(VM *vm) {
     if (vm->cpu.sp > MEMORY_SIZE - 2) {
         fprintf(stderr, "Stack underflow!\n");
@@ -428,10 +442,17 @@ int exec_ret(VM *vm) {
 // fetch-decode-execute loop
 void run_vm(VM *vm) {
     for (;;) {
+        // read opcode
         uint8_t opcode = vm->memory[vm->cpu.pc++];
+
+        // init variables
         uint8_t reg_byte; uint8_t reg1 = 0, reg2 = 0; uint16_t value = 0;
         uint16_t result; 
+
+        // get data on opcode encoding
         OpcodeData opcode_data = opcode_table[opcode];
+
+        // decode operands
         switch (opcode_data.format) {
             case FORMAT_NONE:
                 break;
@@ -458,6 +479,7 @@ void run_vm(VM *vm) {
             fprintf(stderr, "opcode: 0x%02X; reg1: %d; reg2: %d; value: %d\n", opcode, reg1, reg2, value);
         }
         
+        // execute instruction
         switch (opcode) {
             // Control flow
             case OPCODE_NOP: 
@@ -831,6 +853,7 @@ int main(int argc, char *argv[]) {
     int testing = 0;
     const char* filename = NULL;
 
+    // read command-line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
             debug = 1;
@@ -857,11 +880,13 @@ int main(int argc, char *argv[]) {
         printf("===========\n");
     }
 
+    // init VM
     VM vm;
     init_vm(&vm);
     vm.debug = debug;
 
-    if (exec_load_program(&vm, filename) == -1) {
+    // try to load program into memory
+    if (load_program(&vm, filename) == -1) {
         return 1;
     }
        
@@ -869,6 +894,7 @@ int main(int argc, char *argv[]) {
         dump_vm(&vm);
     }
     
+    // run program
     run_vm(&vm);
        
     if (vm.debug) {

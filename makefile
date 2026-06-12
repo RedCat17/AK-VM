@@ -2,6 +2,7 @@
 
 CC = clang
 CFLAGS = -Wall -Wextra 
+DEV_CFLAGS = -Wall -Wextra -Wpedantic -Werror -std=c99
 
 VM_SRC = akvm.c
 VM_BIN = build/akvm
@@ -13,6 +14,9 @@ all: $(VM_BIN)
 
 $(VM_BIN): $(VM_SRC)
 	$(CC) $(CFLAGS) -o $@ $^
+
+dev:
+	$(CC) $(DEV_CFLAGS) -o $(VM_BIN) $(VM_SRC)
 
 clean: 
 	rm -f $(VM_BIN)
