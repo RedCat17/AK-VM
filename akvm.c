@@ -25,6 +25,9 @@
 #define REG1 0xF0 // bits 1111 0000
 #define REG2 0x0F // bits 0000 1111
 
+#define LOW_BYTE_MASK 0x00FF
+#define HIGH_BYTE_MASK 0xFF00
+
 // Opcodes
 // Control flow
 #define OPCODE_NOP      0x00
@@ -345,8 +348,8 @@ int exec_stor(VM *vm, uint16_t address, uint16_t value) {
         }
         putchar(value);
     } else {
-    vm->memory[address] = value & 0x00FF;
-    vm->memory[address + 1] = (value & 0xFF00) >> 8;
+    vm->memory[address] = value & LOW_BYTE_MASK;
+    vm->memory[address + 1] = (value & HIGH_BYTE_MASK) >> 8;
     }
     return 0;
 }
@@ -377,7 +380,7 @@ int exec_storb(VM *vm, uint16_t address, uint8_t value) {
         }
         putchar(value);
     } else {
-    vm->memory[address] = value & 0x00FF;
+    vm->memory[address] = value & LOW_BYTE_MASK;
     }
     return 0;
 }
@@ -398,8 +401,8 @@ int exec_push(VM *vm, uint16_t value) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
-    vm->memory[vm->cpu.sp] = value & 0x00FF;
-    vm->memory[vm->cpu.sp + 1] = (value >> 8);
+    vm->memory[vm->cpu.sp] = value & LOW_BYTE_MASK;
+    vm->memory[vm->cpu.sp + 1] = (value & HIGH_BYTE_MASK) >> 8;
     vm->cpu.sp -= 2;
     return 0;
 }
@@ -421,8 +424,8 @@ int exec_call(VM *vm, uint16_t address) {
         fprintf(stderr, "Stack overflow!\n");
         return -1;
     }
-    vm->memory[vm->cpu.sp] = vm->cpu.pc & 0x00FF;
-    vm->memory[vm->cpu.sp + 1] = (vm->cpu.pc >> 8);
+    vm->memory[vm->cpu.sp] = vm->cpu.pc & LOW_BYTE_MASK;
+    vm->memory[vm->cpu.sp + 1] = (vm->cpu.pc & HIGH_BYTE_MASK) >> 8;
     vm->cpu.sp -= 2;
     vm->cpu.pc = address;
     return 0;
