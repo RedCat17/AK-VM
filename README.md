@@ -86,20 +86,23 @@ make test
 "Hello world" written in Assembly for AK-VM:
 ```
 JMP start
-msg:
-.STR "Hello world!"
+
+msg: .STR "Hello world!"
 
 start:
-MOV R0, msg         ; load msg address to reg R0
+    MOV R0, msg         ; load msg address to reg R0
 
 loop:
-LOADB R1, [R0]      ; load byte from memory to R1
-STORB R1, [0xF801]  ; send byte to TX address
-INC R0              ; increment pointer
-CMP R0, start       ; test if we reached end of string
-JNZ loop
+    LOADB R1, [R0]      ; load byte from memory to R1
+    CMP R1, 0           ; check for null terminator
+    JZ done
 
-HLT                 ; stop execution
+    STORB R1, [0xF801]  ; send byte to TX address
+    INC R0              ; increment pointer
+    JMP loop
+
+done:
+    HLT                 ; stop execution
 ```
 
 ## Documentation
