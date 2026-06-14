@@ -27,6 +27,7 @@
 
 #define LOW_BYTE_MASK 0x00FF
 #define HIGH_BYTE_MASK 0xFF00
+#define MSB_MASK 0x8000
 
 // Opcodes
 // Control flow
@@ -273,7 +274,7 @@ void set_flags_sub(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     if (result == 0) {
         cpu->flags |= ZERO_FLAG;
     }
-    if (result & 0x8000) { // MSB
+    if (result & MSB_MASK) { // MSB
         cpu->flags |= SIGN_FLAG;
     }
     if (a < b) {
@@ -287,7 +288,7 @@ void set_flags_add(CPU *cpu, uint16_t a, uint16_t b, uint16_t result) {
     if (result == 0) {
         cpu->flags |= ZERO_FLAG;
     }
-    if (result & 0x8000) { // MSB
+    if (result & MSB_MASK) { // MSB
         cpu->flags |= SIGN_FLAG;
     }
     if (result < a || result < b) {
